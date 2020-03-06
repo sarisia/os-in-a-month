@@ -1,0 +1,105 @@
+GAS LISTING ipl.s 			page 1
+
+
+   1              	# initial program loader    
+   2              	    .code16
+   3              	
+   4              	    # ORG は不要 リンカでやる
+   5              	
+   6 0000 EB4E     	    jmp entry # .byte 0xeb, 0x4e のかわり？
+   7 0002 90       	    .byte 0x90 # ?
+   8 0003 53415249 	    .ascii "SARISIA " # boot sector name
+   8      53494120 
+   9 000b 0002     	    .word 512 # BPB_BytePerSec
+  10 000d 01       	    .byte 1 # BPB_SecPerClus
+  11 000e 0100     	    .word 1 # BPB_RsvdSecCnt 予約領域セクタ数 ブートセクタ含む
+  12 0010 02       	    .byte 2 # BPB_NumFATs
+  13 0011 E000     	    .word 224 # root directory size
+  14 0013 400B     	    .word 2880 # drive size
+  15 0015 F0       	    .byte 0xf0 # BPB_Media
+  16 0016 0900     	    .word 9 # BPB_FATSz16 (sector)
+  17 0018 1200     	    .word 18 # sectors per track
+  18 001a 0200     	    .word 2 # head nums
+  19 001c 00000000 	    .int 0 # partition nums
+  20 0020 400B0000 	    .int 2880 # drive size
+  21 0024 000029   	    .byte 0, 0, 0x29 # BS_DrvNum, BS_Reserved1, BS_BootSig
+  22 0027 FFFFFFFF 	    .int 0xffffffff # BS_VolID
+  23 002b 48454C4C 	    .ascii "HELLOOS    " # disk name
+  23      4F4F5320 
+  23      202020
+  24 0036 46415431 	    .ascii "FAT12   " # format name
+  24      32202020 
+  25 003e 00000000 	    .skip 18 # BS_BootCode begin
+  25      00000000 
+  25      00000000 
+  25      00000000 
+  25      0000
+  26              	
+  27              	entry:
+  28              	    # init registers
+  29 0050 B80000   	    mov $0, %ax # ax: 16bit accumulator register
+  30 0053 8ED0     	    mov %ax, %ss # ss: 16bit stack segment register
+  31 0055 BC007C   	    mov $0x7c00, %sp # sp: 16bit stack pointer
+  32 0058 8ED8     	    mov %ax, %ds # ds: 16bit data segment
+  33              	
+  34              	# harib00a
+  35              	# call BIOS to read disk
+  36 005a B82008   	    mov $0x0820, %ax
+  37 005d 8EC0     	    mov %ax, %es # es: 16bit extra segment
+  38 005f B500     	    mov $0, %ch # ch: 8bit counter high # シリンダ0 (最も外周)
+  39 0061 B600     	    mov $0, %dh # dh: 8bit data high # ヘッド0 (表)
+  40 0063 B102     	    mov $2, %cl # cl: 8bit counter low # セクタ2 (セクタ1はIPL、つまりこれ セクタ�
+  41              	
+  42 0065 B402     	    mov $0x02, %ah # disk read
+  43 0067 B001     	    mov $1, %al # num of sectors to process
+  44 0069 BB0000   	    mov $0, %bx # buffer address?
+  45 006c B200     	    mov $0x00, %dl # dl: 8bit data low
+  46 006e CD13     	    int $0x13 # BIOS: disk
+  47 0070 7203     	    jc error # bios returns CF=0 if success else CF=1
+  48              	    
+  49              	    # jmp error # 本当に動いているか確認したかった
+GAS LISTING ipl.s 			page 2
+
+
+  50              	
+  51              	fin:
+  52 0072 F4       	    hlt # ring level 0???
+  53 0073 EBFD     	    jmp fin
+  54              	
+  55              	error:
+  56 0075 BE0000   	    mov $msg, %si
+  57              	putloop:
+  58 0078 8A04     	    mov (%si), %al # al: 8bit accumulator low
+  59 007a 83C601   	    add $1, %si
+  60 007d 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
+  61 007f 74F1     	    je fin
+  62 0081 B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
+  63 0083 8B1E0F00 	    mov 15, %bx # bx: 16bit base register
+  64 0087 CD10     	    int $0x10 # bios interrupt call???
+  65 0089 EBED     	    jmp putloop
+  66              	
+  67              	msg:
+  68 008b 0A0A     	    .ascii "\n\n"
+  69 008d 6C6F6164 	    .ascii "load error!"
+  69      20657272 
+  69      6F7221
+  70 0098 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
+  71              	
+  72              	# finalize boot sector
+  73 009a 00000000 	    .org 0x01fe # 0x7dfe ではない
+  73      00000000 
+  73      00000000 
+  73      00000000 
+  73      00000000 
+  74 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
+GAS LISTING ipl.s 			page 3
+
+
+DEFINED SYMBOLS
+               ipl.s:27     .text:0000000000000050 entry
+               ipl.s:55     .text:0000000000000075 error
+               ipl.s:51     .text:0000000000000072 fin
+               ipl.s:67     .text:000000000000008b msg
+               ipl.s:57     .text:0000000000000078 putloop
+
+NO UNDEFINED SYMBOLS

@@ -1,3 +1,4 @@
+# initial program loader    
     .code16
 
     # ORG は不要 リンカでやる
@@ -5,23 +6,23 @@
     jmp entry # .byte 0xeb, 0x4e のかわり？
     .byte 0x90 # ?
     .ascii "SARISIA " # boot sector name
-    .word 512 # sector size
-    .byte 1 # cluster size (1 sector)
-    .word 1 # FAT entry point?
-    .byte 2 # FAT nums
+    .word 512 # BPB_BytePerSec
+    .byte 1 # BPB_SecPerClus
+    .word 1 # BPB_RsvdSecCnt 予約領域セクタ数 ブートセクタ含む
+    .byte 2 # BPB_NumFATs
     .word 224 # root directory size
     .word 2880 # drive size
-    .byte 0xf0 # media type
-    .word 9 # FAT size
+    .byte 0xf0 # BPB_Media
+    .word 9 # BPB_FATSz16 (sector)
     .word 18 # sectors per track
     .word 2 # head nums
     .int 0 # partition nums
     .int 2880 # drive size
-    .byte 0, 0, 0x29 # ?
-    .int 0xffffffff # ?
+    .byte 0, 0, 0x29 # BS_DrvNum, BS_Reserved1, BS_BootSig
+    .int 0xffffffff # BS_VolID
     .ascii "HELLOOS    " # disk name
     .ascii "FAT12   " # format name
-    .skip 18 # ?
+    .skip 18 # BS_BootCode begin
 
 entry:
     # init registers
@@ -51,10 +52,4 @@ msg:
     .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
 
     .org 0x01fe # 0x7dfe ではない
-    .byte 0x55, 0xaa
-
-# ?????
-    .byte 0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
-    .skip 4600
-    .byte 0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
-    .skip 1469432
+    .byte 0x55, 0xaa # BS_BootSign

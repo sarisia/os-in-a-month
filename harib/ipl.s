@@ -1,7 +1,7 @@
 # initial program loader    
     .code16
 
-    # ORG は不要 リンカでやる
+    .set CYLS, 10 # is this ok?
 
     jmp entry # .byte 0xeb, 0x4e のかわり？
     .byte 0x90 # ?
@@ -63,11 +63,29 @@ retry:
 
 next:
     mov %es, %ax # x86 do not have  `ADD ES addr`
-    add $0x20, %ax
+    add $0x20, %ax # 512 byte (1 sector) / 16 (memory index segment)
     mov %ax, %es
     add $1, %cl # セクタをインクリメント
-    cmp $18, %cl
+    cmp $18, %cl 
+
+    # if %cl (sector) <= 18
     jbe readloop # jump below or equal
+
+    # else
+    mov $1, %cl # reset sector
+    add $1, %dh # add head 1
+    cmp $2, %dh
+
+    # if dh (head) < 2
+    jb readloop
+
+    # else
+    mov $0, %dh # reset head to 0
+    add $1, %ch # increment cylinder
+    cmp $CYLS, %ch
+
+    # if %ch (cylinder) < CYLS
+    jb readloop # jump below
 
 fin:
     hlt # ring level 0???
@@ -81,8 +99,8 @@ putloop:
     cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
     je fin
     mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
-    mov 15, %bx # bx: 16bit base register
-    int $0x10 # bios interrupt call???
+    mov $15, %bx # bx: 16bit base register
+    int $0x10 # bios interrupt call
     jmp putloop
 
 msg:

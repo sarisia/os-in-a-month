@@ -4,7 +4,7 @@ GAS LISTING ipl.s 			page 1
    1              	# initial program loader    
    2              	    .code16
    3              	
-   4              	    # ORG は不要 リンカでやる
+   4              	    .set CYLS, 10 # is this ok?
    5              	
    6 0000 EB4E     	    jmp entry # .byte 0xeb, 0x4e のかわり？
    7 0002 90       	    .byte 0x90 # ?
@@ -67,7 +67,7 @@ GAS LISTING ipl.s 			page 1
   53              	    # fail
   54 0075 83C601   	    add $1, %si
   55 0078 83FE05   	    cmp $5, %si # flag: o..szapc
-  56 007b 731A     	    jae error # jump above or equal
+  56 007b 732E     	    jae error # jump above or equal
   57              	
   58              	    # call BIOS to reset
   59 007d B400     	    mov $0x00, %ah # reset
@@ -77,53 +77,75 @@ GAS LISTING ipl.s 			page 1
   63              	
   64              	next:
   65 0085 8CC0     	    mov %es, %ax # x86 do not have  `ADD ES addr`
-  66 0087 83C020   	    add $0x20, %ax
+  66 0087 83C020   	    add $0x20, %ax # 512 byte (1 sector) / 16 (memory index segment)
   67 008a 8EC0     	    mov %ax, %es
   68 008c 80C101   	    add $1, %cl # セクタをインクリメント
-  69 008f 80F912   	    cmp $18, %cl
-  70 0092 76D1     	    jbe readloop # jump below or equal
-  71              	
-  72              	fin:
-  73 0094 F4       	    hlt # ring level 0???
-  74 0095 EBFD     	    jmp fin
-  75              	
-  76              	error:
-  77 0097 BE0000   	    mov $msg, %si
-  78              	putloop:
-  79 009a 8A04     	    mov (%si), %al # al: 8bit accumulator low
-  80 009c 83C601   	    add $1, %si
-  81 009f 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
-  82 00a1 74F1     	    je fin
-  83 00a3 B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
-  84 00a5 8B1E0F00 	    mov 15, %bx # bx: 16bit base register
-  85 00a9 CD10     	    int $0x10 # bios interrupt call???
-  86 00ab EBED     	    jmp putloop
-  87              	
-  88              	msg:
-  89 00ad 0A0A     	    .ascii "\n\n"
-  90 00af 6C6F6164 	    .ascii "load error!"
-  90      20657272 
-  90      6F7221
-  91 00ba 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
-  92              	
-  93              	# finalize boot sector
-  94 00bc 00000000 	    .org 0x01fe # 0x7dfe ではない
-  94      00000000 
-  94      00000000 
-  94      00000000 
-  94      00000000 
-  95 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
+  69 008f 80F912   	    cmp $18, %cl 
+  70              	
+  71              	    # if %cl (sector) <= 18
+  72 0092 76D1     	    jbe readloop # jump below or equal
+  73              	
+  74              	    # else
+  75 0094 B101     	    mov $1, %cl # reset sector
+  76 0096 80C601   	    add $1, %dh # add head 1
+  77 0099 80FE02   	    cmp $2, %dh
+  78              	
+  79              	    # if dh (head) < 2
+  80 009c 72C7     	    jb readloop
+  81              	
+  82              	    # else
+  83 009e B600     	    mov $0, %dh # reset head to 0
+  84 00a0 80C501   	    add $1, %ch # increment cylinder
+  85 00a3 80FD0A   	    cmp $CYLS, %ch
+  86              	
+  87              	    # if %ch (cylinder) < CYLS
+  88 00a6 72BD     	    jb readloop # jump below
+  89              	
+  90              	fin:
+  91 00a8 F4       	    hlt # ring level 0???
+  92 00a9 EBFD     	    jmp fin
+  93              	
+  94              	error:
+  95 00ab BE0000   	    mov $msg, %si
+  96              	putloop:
+  97 00ae 8A04     	    mov (%si), %al # al: 8bit accumulator low
+  98 00b0 83C601   	    add $1, %si
+  99 00b3 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
+ 100 00b5 74F1     	    je fin
+ 101 00b7 B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
+ 102 00b9 BB0F00   	    mov $15, %bx # bx: 16bit base register
+ 103 00bc CD10     	    int $0x10 # bios interrupt call
+ 104 00be EBEE     	    jmp putloop
+ 105              	
+ 106              	msg:
 GAS LISTING ipl.s 			page 3
 
 
+ 107 00c0 0A0A     	    .ascii "\n\n"
+ 108 00c2 6C6F6164 	    .ascii "load error!"
+ 108      20657272 
+ 108      6F7221
+ 109 00cd 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
+ 110              	
+ 111              	# finalize boot sector
+ 112 00cf 00000000 	    .org 0x01fe # 0x7dfe ではない
+ 112      00000000 
+ 112      00000000 
+ 112      00000000 
+ 112      00000000 
+ 113 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
+GAS LISTING ipl.s 			page 4
+
+
 DEFINED SYMBOLS
+               ipl.s:4      *ABS*:000000000000000a CYLS
                ipl.s:27     .text:0000000000000050 entry
                ipl.s:41     .text:0000000000000065 readloop
                ipl.s:43     .text:0000000000000068 retry
                ipl.s:64     .text:0000000000000085 next
-               ipl.s:76     .text:0000000000000097 error
-               ipl.s:72     .text:0000000000000094 fin
-               ipl.s:88     .text:00000000000000ad msg
-               ipl.s:78     .text:000000000000009a putloop
+               ipl.s:94     .text:00000000000000ab error
+               ipl.s:90     .text:00000000000000a8 fin
+               ipl.s:106    .text:00000000000000c0 msg
+               ipl.s:96     .text:00000000000000ae putloop
 
 NO UNDEFINED SYMBOLS

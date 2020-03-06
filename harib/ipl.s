@@ -31,7 +31,6 @@ entry:
     mov $0x7c00, %sp # sp: 16bit stack pointer
     mov %ax, %ds # ds: 16bit data segment
 
-# harib00a
 # call BIOS to read disk
     mov $0x0820, %ax
     mov %ax, %es # es: 16bit extra segment
@@ -39,14 +38,28 @@ entry:
     mov $0, %dh # dh: 8bit data high # ヘッド0 (表)
     mov $2, %cl # cl: 8bit counter low # セクタ2 (セクタ1はIPL、つまりこれ セクタカウントは1から！)
 
+# harib00b
+    mov $0, %si # fail counter
+retry:
     mov $0x02, %ah # disk read
     mov $1, %al # num of sectors to process
     mov $0, %bx # buffer address?
     mov $0x00, %dl # dl: 8bit data low
     int $0x13 # BIOS: disk
-    jc error # bios returns CF=0 if success else CF=1
-    
-    # jmp error # 本当に動いているか確認したかった
+
+    # success
+    jnc fin # bios returns CF=0 if success else CF=1
+
+    # fail
+    add $1, %si
+    cmp $5, %si # flag: o..szapc
+    jae error # jump above or equal
+
+    # call BIOS to reset
+    mov $0x00, %ah # reset
+    mov $0x00, %dl # drive index (fda)
+    int $0x13 # BIOS: disk
+    jmp retry
 
 fin:
     hlt # ring level 0???

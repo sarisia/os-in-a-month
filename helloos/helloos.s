@@ -1,4 +1,9 @@
-    .byte 0xeb, 0x4e, 0x90 # ?
+    .code16
+
+    # ORG は不要 リンカでやる
+
+    jmp entry # .byte 0xeb, 0x4e のかわり？
+    .byte 0x90 # ?
     .ascii "SARISIA " # boot sector name
     .word 512 # sector size
     .byte 1 # cluster size (1 sector)
@@ -18,21 +23,34 @@
     .ascii "FAT12   " # format name
     .skip 18 # ?
 
-# program body
-    .byte 0xb8, 0x00, 0x00, 0x8e, 0xd0, 0xbc, 0x00, 0x7c
-    .byte 0x8e, 0xd8, 0x8e, 0xc0, 0xbe, 0x74, 0x7c, 0x8a
-    .byte 0x04, 0x83, 0xc6, 0x01, 0x3c, 0x00, 0x74, 0x09
-    .byte 0xb4, 0x0e, 0xbb, 0x0f, 0x00, 0xcd, 0x10, 0xeb
-    .byte 0xee, 0xf4, 0xeb, 0xfd
+entry:
+    # init registers
+    mov $0, %ax # ax: 16bit accumulator register
+    mov %ax, %ss # ss: 16bit stack segment register
+    mov $0x7c00, %sp # sp: 16bit stack pointer
+    mov %ax, %ds # ds: 16bit data segment
+    mov %ax, %es # es: 16bit extra segment
 
-# message
+    mov $msg, %si # si: 16bit source index
+putloop:
+    mov (%si), %al # al: 8bit accumulator low
+    add $1, %si
+    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
+    je fin
+    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
+    mov 15, %bx # bx: 16bit base register
+    int $0x10 # bios interrupt call???
+    jmp putloop
+fin:
+    hlt # ring level 0???
+    jmp fin
+
+msg:
     .ascii "\n\n"
     .ascii "hello, sarisia"
-    .ascii "\n"
-    .byte 0
+    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
 
-    .org 0x01fe # skip (fill zero) to 0x1fe
-    
+    .org 0x01fe # 0x7dfe ではない
     .byte 0x55, 0xaa
 
 # ?????

@@ -1,8 +1,15 @@
 QEMU=qemu-system-i386.exe
 
-helloos.img: helloos.s
-	as -o _helloos.img helloos.s
-	objcopy -O binary _helloos.img helloos.img
+all: helloos.img
 
+helloos.o: helloos.s
+	as -o helloos.o helloos.s
+
+helloos.img: helloos.o helloos.lds
+	ld -T helloos.lds --oformat=binary -o helloos.img helloos.o
+	
 run: helloos.img
 	$(QEMU) -fda helloos.img
+
+clean:
+	rm *.o *.img

@@ -38,7 +38,7 @@ entry:
     mov $0, %dh # dh: 8bit data high # ヘッド0 (表)
     mov $2, %cl # cl: 8bit counter low # セクタ2 (セクタ1はIPL、つまりこれ セクタカウントは1から！)
 
-# harib00b
+readloop:
     mov $0, %si # fail counter
 retry:
     mov $0x02, %ah # disk read
@@ -48,7 +48,7 @@ retry:
     int $0x13 # BIOS: disk
 
     # success
-    jnc fin # bios returns CF=0 if success else CF=1
+    jnc next # bios returns CF=0 if success else CF=1
 
     # fail
     add $1, %si
@@ -60,6 +60,14 @@ retry:
     mov $0x00, %dl # drive index (fda)
     int $0x13 # BIOS: disk
     jmp retry
+
+next:
+    mov %es, %ax # x86 do not have  `ADD ES addr`
+    add $0x20, %ax
+    mov %ax, %es
+    add $1, %cl # セクタをインクリメント
+    cmp $18, %cl
+    jbe readloop # jump below or equal
 
 fin:
     hlt # ring level 0???

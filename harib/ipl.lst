@@ -49,7 +49,7 @@ GAS LISTING ipl.s 			page 1
   38 0061 B600     	    mov $0, %dh # dh: 8bit data high # ヘッド0 (表)
   39 0063 B102     	    mov $2, %cl # cl: 8bit counter low # セクタ2 (セクタ1はIPL、つまりこれ セクタ�
   40              	
-  41              	# harib00b
+  41              	readloop:
   42 0065 BE0000   	    mov $0, %si # fail counter
   43              	retry:
   44 0068 B402     	    mov $0x02, %ah # disk read
@@ -62,12 +62,12 @@ GAS LISTING ipl.s 			page 1
 
 
   50              	    # success
-  51 0073 7310     	    jnc fin # bios returns CF=0 if success else CF=1
+  51 0073 7310     	    jnc next # bios returns CF=0 if success else CF=1
   52              	
   53              	    # fail
   54 0075 83C601   	    add $1, %si
   55 0078 83FE05   	    cmp $5, %si # flag: o..szapc
-  56 007b 730B     	    jae error # jump above or equal
+  56 007b 731A     	    jae error # jump above or equal
   57              	
   58              	    # call BIOS to reset
   59 007d B400     	    mov $0x00, %ah # reset
@@ -75,45 +75,55 @@ GAS LISTING ipl.s 			page 1
   61 0081 CD13     	    int $0x13 # BIOS: disk
   62 0083 EBE3     	    jmp retry
   63              	
-  64              	fin:
-  65 0085 F4       	    hlt # ring level 0???
-  66 0086 EBFD     	    jmp fin
-  67              	
-  68              	error:
-  69 0088 BE0000   	    mov $msg, %si
-  70              	putloop:
-  71 008b 8A04     	    mov (%si), %al # al: 8bit accumulator low
-  72 008d 83C601   	    add $1, %si
-  73 0090 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
-  74 0092 74F1     	    je fin
-  75 0094 B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
-  76 0096 8B1E0F00 	    mov 15, %bx # bx: 16bit base register
-  77 009a CD10     	    int $0x10 # bios interrupt call???
-  78 009c EBED     	    jmp putloop
-  79              	
-  80              	msg:
-  81 009e 0A0A     	    .ascii "\n\n"
-  82 00a0 6C6F6164 	    .ascii "load error!"
-  82      20657272 
-  82      6F7221
-  83 00ab 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
-  84              	
-  85              	# finalize boot sector
-  86 00ad 00000000 	    .org 0x01fe # 0x7dfe ではない
-  86      00000000 
-  86      00000000 
-  86      00000000 
-  86      00000000 
-  87 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
+  64              	next:
+  65 0085 8CC0     	    mov %es, %ax # x86 do not have  `ADD ES addr`
+  66 0087 83C020   	    add $0x20, %ax
+  67 008a 8EC0     	    mov %ax, %es
+  68 008c 80C101   	    add $1, %cl # セクタをインクリメント
+  69 008f 80F912   	    cmp $18, %cl
+  70 0092 76D1     	    jbe readloop # jump below or equal
+  71              	
+  72              	fin:
+  73 0094 F4       	    hlt # ring level 0???
+  74 0095 EBFD     	    jmp fin
+  75              	
+  76              	error:
+  77 0097 BE0000   	    mov $msg, %si
+  78              	putloop:
+  79 009a 8A04     	    mov (%si), %al # al: 8bit accumulator low
+  80 009c 83C601   	    add $1, %si
+  81 009f 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
+  82 00a1 74F1     	    je fin
+  83 00a3 B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
+  84 00a5 8B1E0F00 	    mov 15, %bx # bx: 16bit base register
+  85 00a9 CD10     	    int $0x10 # bios interrupt call???
+  86 00ab EBED     	    jmp putloop
+  87              	
+  88              	msg:
+  89 00ad 0A0A     	    .ascii "\n\n"
+  90 00af 6C6F6164 	    .ascii "load error!"
+  90      20657272 
+  90      6F7221
+  91 00ba 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
+  92              	
+  93              	# finalize boot sector
+  94 00bc 00000000 	    .org 0x01fe # 0x7dfe ではない
+  94      00000000 
+  94      00000000 
+  94      00000000 
+  94      00000000 
+  95 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
 GAS LISTING ipl.s 			page 3
 
 
 DEFINED SYMBOLS
                ipl.s:27     .text:0000000000000050 entry
+               ipl.s:41     .text:0000000000000065 readloop
                ipl.s:43     .text:0000000000000068 retry
-               ipl.s:64     .text:0000000000000085 fin
-               ipl.s:68     .text:0000000000000088 error
-               ipl.s:80     .text:000000000000009e msg
-               ipl.s:70     .text:000000000000008b putloop
+               ipl.s:64     .text:0000000000000085 next
+               ipl.s:76     .text:0000000000000097 error
+               ipl.s:72     .text:0000000000000094 fin
+               ipl.s:88     .text:00000000000000ad msg
+               ipl.s:78     .text:000000000000009a putloop
 
 NO UNDEFINED SYMBOLS

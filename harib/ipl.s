@@ -4,24 +4,24 @@
     .set CYLS, 10 # is this ok?
 
     jmp entry # .byte 0xeb, 0x4e のかわり？
-    .byte 0x90 # ?
-    .ascii "SARISIA " # boot sector name
+    .byte 0x90 # NOP らしい
+    .ascii "SARISIA " # BS_OEMName: boot sector name
     .word 512 # BPB_BytePerSec
     .byte 1 # BPB_SecPerClus
     .word 1 # BPB_RsvdSecCnt 予約領域セクタ数 ブートセクタ含む
     .byte 2 # BPB_NumFATs
-    .word 224 # root directory size
-    .word 2880 # drive size
+    .word 224 # BPB_RootEntCnt: root directory size
+    .word 2880 # BPB_TotSec16: drive size
     .byte 0xf0 # BPB_Media
     .word 9 # BPB_FATSz16 (sector)
-    .word 18 # sectors per track
-    .word 2 # head nums
-    .int 0 # partition nums
-    .int 2880 # drive size
+    .word 18 # BPB_SecPerTrk: sectors per track
+    .word 2 # BPB_NumHeads: head nums
+    .int 0 # BPB_HiddSec: partition nums
+    .int 2880 # BPB_TotSec32: drive size
     .byte 0, 0, 0x29 # BS_DrvNum, BS_Reserved1, BS_BootSig
     .int 0xffffffff # BS_VolID
-    .ascii "HELLOOS    " # disk name
-    .ascii "FAT12   " # format name
+    .ascii "HELLOOS    " # BS_VolLab: disk name
+    .ascii "FAT12   " # BS_FilSysType: format name
     .skip 18 # BS_BootCode begin
 
 entry:
@@ -111,3 +111,5 @@ msg:
 # finalize boot sector
     .org 0x01fe # 0x7dfe ではない
     .byte 0x55, 0xaa # BS_BootSign
+
+# followed by FAT1, FAT2, RootDirTable actual bytes

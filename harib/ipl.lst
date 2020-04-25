@@ -7,27 +7,27 @@ GAS LISTING ipl.s 			page 1
    4              	    .set CYLS, 10 # is this ok?
    5              	
    6 0000 EB4E     	    jmp entry # .byte 0xeb, 0x4e のかわり？
-   7 0002 90       	    .byte 0x90 # ?
-   8 0003 53415249 	    .ascii "SARISIA " # boot sector name
+   7 0002 90       	    .byte 0x90 # NOP らしい
+   8 0003 53415249 	    .ascii "SARISIA " # BS_OEMName: boot sector name
    8      53494120 
    9 000b 0002     	    .word 512 # BPB_BytePerSec
   10 000d 01       	    .byte 1 # BPB_SecPerClus
   11 000e 0100     	    .word 1 # BPB_RsvdSecCnt 予約領域セクタ数 ブートセクタ含む
   12 0010 02       	    .byte 2 # BPB_NumFATs
-  13 0011 E000     	    .word 224 # root directory size
-  14 0013 400B     	    .word 2880 # drive size
+  13 0011 E000     	    .word 224 # BPB_RootEntCnt: root directory size
+  14 0013 400B     	    .word 2880 # BPB_TotSec16: drive size
   15 0015 F0       	    .byte 0xf0 # BPB_Media
   16 0016 0900     	    .word 9 # BPB_FATSz16 (sector)
-  17 0018 1200     	    .word 18 # sectors per track
-  18 001a 0200     	    .word 2 # head nums
-  19 001c 00000000 	    .int 0 # partition nums
-  20 0020 400B0000 	    .int 2880 # drive size
+  17 0018 1200     	    .word 18 # BPB_SecPerTrk: sectors per track
+  18 001a 0200     	    .word 2 # BPB_NumHeads: head nums
+  19 001c 00000000 	    .int 0 # BPB_HiddSec: partition nums
+  20 0020 400B0000 	    .int 2880 # BPB_TotSec32: drive size
   21 0024 000029   	    .byte 0, 0, 0x29 # BS_DrvNum, BS_Reserved1, BS_BootSig
   22 0027 FFFFFFFF 	    .int 0xffffffff # BS_VolID
-  23 002b 48454C4C 	    .ascii "HELLOOS    " # disk name
+  23 002b 48454C4C 	    .ascii "HELLOOS    " # BS_VolLab: disk name
   23      4F4F5320 
   23      202020
-  24 0036 46415431 	    .ascii "FAT12   " # format name
+  24 0036 46415431 	    .ascii "FAT12   " # BS_FilSysType: format name
   24      32202020 
   25 003e 00000000 	    .skip 18 # BS_BootCode begin
   25      00000000 
@@ -134,6 +134,8 @@ GAS LISTING ipl.s 			page 1
  112      00000000 
  112      00000000 
  113 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
+ 114              	
+ 115              	# followed by FAT1, FAT2, RootDirTable actual bytes
 GAS LISTING ipl.s 			page 4
 
 

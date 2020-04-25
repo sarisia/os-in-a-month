@@ -1,0 +1,14 @@
+GAS LISTING haribote.s 			page 1
+
+
+   1              	    .code16
+   2              	fin:
+   3 0000 F4       	    hlt
+   4 0001 EBFD     	    jmp fin
+GAS LISTING haribote.s 			page 2
+
+
+DEFINED SYMBOLS
+          haribote.s:2      .text:0000000000000000 fin
+
+NO UNDEFINED SYMBOLS

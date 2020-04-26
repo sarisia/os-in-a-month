@@ -101,41 +101,47 @@ GAS LISTING ipl.s 			page 1
   87              	    # if %ch (cylinder) < CYLS
   88 00a6 72BD     	    jb readloop # jump below
   89              	
-  90              	fin:
-  91 00a8 F4       	    hlt # ring level 0???
-  92 00a9 EBFD     	    jmp fin
-  93              	
-  94              	error:
-  95 00ab BE0000   	    mov $msg, %si
-  96              	putloop:
-  97 00ae 8A04     	    mov (%si), %al # al: 8bit accumulator low
-  98 00b0 83C601   	    add $1, %si
-  99 00b3 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
- 100 00b5 74F1     	    je fin
- 101 00b7 B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
- 102 00b9 BB0F00   	    mov $15, %bx # bx: 16bit base register
- 103 00bc CD10     	    int $0x10 # bios interrupt call
- 104 00be EBEE     	    jmp putloop
- 105              	
- 106              	msg:
+  90              	    # execute haribote.sys
+  91              	    # 0x8000 に最初のセクタが読み込まれる (まだ読み込んでいないが)
+  92              	    # haribote.sys は (mkfs.fat + mount でイメージを作ると) イメージ上の 0x4400 に
+  93              	    # ので、haribote.sys が配置されているのはメモリ上の 0x8000 + 0x4400 = 0xc400
+  94 00a8 E90000   	    jmp 0xc400
+  95              	
+  96              	error:
+  97 00ab BE0000   	    mov $msg, %si
+  98              	putloop:
+  99 00ae 8A04     	    mov (%si), %al # al: 8bit accumulator low
+ 100 00b0 83C601   	    add $1, %si
+ 101 00b3 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
+ 102 00b5 7409     	    je fin
+ 103 00b7 B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
+ 104 00b9 BB0F00   	    mov $15, %bx # bx: 16bit base register
+ 105 00bc CD10     	    int $0x10 # bios interrupt call
+ 106 00be EBEE     	    jmp putloop
 GAS LISTING ipl.s 			page 3
 
 
- 107 00c0 0A0A     	    .ascii "\n\n"
- 108 00c2 6C6F6164 	    .ascii "load error!"
- 108      20657272 
- 108      6F7221
- 109 00cd 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
+ 107              	fin:
+ 108 00c0 F4       	    hlt
+ 109 00c1 EBFD     	    jmp fin
  110              	
- 111              	# finalize boot sector
- 112 00cf 00000000 	    .org 0x01fe # 0x7dfe ではない
- 112      00000000 
- 112      00000000 
- 112      00000000 
- 112      00000000 
- 113 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
- 114              	
- 115              	# followed by FAT1, FAT2, RootDirTable actual bytes
+ 111              	msg:
+ 112 00c3 0A0A     	    .ascii "\n\n"
+ 113 00c5 6C6F6164 	    .ascii "load error!"
+ 113      20657272 
+ 113      6F7221
+ 114 00d0 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
+ 115 00d2 00       	    .byte 0 # terminate character
+ 116              	
+ 117              	# finalize boot sector
+ 118 00d3 00000000 	    .org 0x01fe # 0x7dfe ではない
+ 118      00000000 
+ 118      00000000 
+ 118      00000000 
+ 118      00000000 
+ 119 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
+ 120              	
+ 121              	# followed by FAT1, FAT2, RootDirTable actual bytes
 GAS LISTING ipl.s 			page 4
 
 
@@ -145,9 +151,9 @@ DEFINED SYMBOLS
                ipl.s:41     .text:0000000000000065 readloop
                ipl.s:43     .text:0000000000000068 retry
                ipl.s:64     .text:0000000000000085 next
-               ipl.s:94     .text:00000000000000ab error
-               ipl.s:90     .text:00000000000000a8 fin
-               ipl.s:106    .text:00000000000000c0 msg
-               ipl.s:96     .text:00000000000000ae putloop
+               ipl.s:96     .text:00000000000000ab error
+               ipl.s:111    .text:00000000000000c3 msg
+               ipl.s:98     .text:00000000000000ae putloop
+               ipl.s:107    .text:00000000000000c0 fin
 
 NO UNDEFINED SYMBOLS

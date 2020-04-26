@@ -87,9 +87,11 @@ next:
     # if %ch (cylinder) < CYLS
     jb readloop # jump below
 
-fin:
-    hlt # ring level 0???
-    jmp fin
+    # execute haribote.sys
+    # 0x8000 に最初のセクタが読み込まれる (まだ読み込んでいないが)
+    # haribote.sys は (mkfs.fat + mount でイメージを作ると) イメージ上の 0x4400 に配置される
+    # ので、haribote.sys が配置されているのはメモリ上の 0x8000 + 0x4400 = 0xc400
+    jmp 0xc400
 
 error:
     mov $msg, %si
@@ -102,11 +104,15 @@ putloop:
     mov $15, %bx # bx: 16bit base register
     int $0x10 # bios interrupt call
     jmp putloop
+fin:
+    hlt
+    jmp fin
 
 msg:
     .ascii "\n\n"
     .ascii "load error!"
     .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
+    .byte 0 # terminate character
 
 # finalize boot sector
     .org 0x01fe # 0x7dfe ではない

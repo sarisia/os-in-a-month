@@ -2,13 +2,18 @@ GAS LISTING haribote.s 			page 1
 
 
    1              	    .code16
-   2              	fin:
-   3 0000 F4       	    hlt
-   4 0001 EBFD     	    jmp fin
+   2              	
+   3 0000 B400     	    mov $0x00, %ah # AT BIOS: ビデオモード設定
+   4 0002 B013     	    mov $0x13, %al # mode: VGA 320x200 8bit color packed pixel (?)
+   5 0004 CD10     	    int $0x10
+   6              	
+   7              	fin:
+   8 0006 F4       	    hlt
+   9 0007 EBFD     	    jmp fin
 GAS LISTING haribote.s 			page 2
 
 
 DEFINED SYMBOLS
-          haribote.s:2      .text:0000000000000000 fin
+          haribote.s:7      .text:0000000000000006 fin
 
 NO UNDEFINED SYMBOLS

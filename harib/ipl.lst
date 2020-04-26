@@ -1,4 +1,4 @@
-GAS LISTING ipl.s 			page 1
+GAS LISTING ipl10.s 			page 1
 
 
    1              	# initial program loader    
@@ -58,7 +58,7 @@ GAS LISTING ipl.s 			page 1
   47 006f B200     	    mov $0x00, %dl # dl: 8bit data low
   48 0071 CD13     	    int $0x13 # BIOS: disk
   49              	
-GAS LISTING ipl.s 			page 2
+GAS LISTING ipl10.s 			page 2
 
 
   50              	    # success
@@ -67,7 +67,7 @@ GAS LISTING ipl.s 			page 1
   53              	    # fail
   54 0075 83C601   	    add $1, %si
   55 0078 83FE05   	    cmp $5, %si # flag: o..szapc
-  56 007b 732E     	    jae error # jump above or equal
+  56 007b 7332     	    jae error # jump above or equal
   57              	
   58              	    # call BIOS to reset
   59 007d B400     	    mov $0x00, %ah # reset
@@ -105,55 +105,56 @@ GAS LISTING ipl.s 			page 1
   91              	    # 0x8000 に最初のセクタが読み込まれる (まだ読み込んでいないが)
   92              	    # haribote.sys は (mkfs.fat + mount でイメージを作ると) イメージ上の 0x4400 に
   93              	    # ので、haribote.sys が配置されているのはメモリ上の 0x8000 + 0x4400 = 0xc400
-  94 00a8 E90000   	    jmp 0xc400
-  95              	
-  96              	error:
-  97 00ab BE0000   	    mov $msg, %si
-  98              	putloop:
-  99 00ae 8A04     	    mov (%si), %al # al: 8bit accumulator low
- 100 00b0 83C601   	    add $1, %si
- 101 00b3 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
- 102 00b5 7409     	    je fin
- 103 00b7 B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
- 104 00b9 BB0F00   	    mov $15, %bx # bx: 16bit base register
- 105 00bc CD10     	    int $0x10 # bios interrupt call
- 106 00be EBEE     	    jmp putloop
-GAS LISTING ipl.s 			page 3
+  94 00a8 882EFF00 	    mov %ch, 0x0ff
+  95 00ac E90000   	    jmp 0xc400
+  96              	
+  97              	error:
+  98 00af BE0000   	    mov $msg, %si
+  99              	putloop:
+ 100 00b2 8A04     	    mov (%si), %al # al: 8bit accumulator low
+ 101 00b4 83C601   	    add $1, %si
+ 102 00b7 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
+ 103 00b9 7409     	    je fin
+ 104 00bb B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
+ 105 00bd BB0F00   	    mov $15, %bx # bx: 16bit base register
+ 106 00c0 CD10     	    int $0x10 # bios interrupt call
+GAS LISTING ipl10.s 			page 3
 
 
- 107              	fin:
- 108 00c0 F4       	    hlt
- 109 00c1 EBFD     	    jmp fin
- 110              	
- 111              	msg:
- 112 00c3 0A0A     	    .ascii "\n\n"
- 113 00c5 6C6F6164 	    .ascii "load error!"
- 113      20657272 
- 113      6F7221
- 114 00d0 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
- 115 00d2 00       	    .byte 0 # terminate character
- 116              	
- 117              	# finalize boot sector
- 118 00d3 00000000 	    .org 0x01fe # 0x7dfe ではない
- 118      00000000 
- 118      00000000 
- 118      00000000 
- 118      00000000 
- 119 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
- 120              	
- 121              	# followed by FAT1, FAT2, RootDirTable actual bytes
-GAS LISTING ipl.s 			page 4
+ 107 00c2 EBEE     	    jmp putloop
+ 108              	fin:
+ 109 00c4 F4       	    hlt
+ 110 00c5 EBFD     	    jmp fin
+ 111              	
+ 112              	msg:
+ 113 00c7 0A0A     	    .ascii "\n\n"
+ 114 00c9 6C6F6164 	    .ascii "load error!"
+ 114      20657272 
+ 114      6F7221
+ 115 00d4 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
+ 116 00d6 00       	    .byte 0 # terminate character
+ 117              	
+ 118              	# finalize boot sector
+ 119 00d7 00000000 	    .org 0x01fe # 0x7dfe ではない
+ 119      00000000 
+ 119      00000000 
+ 119      00000000 
+ 119      00000000 
+ 120 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
+ 121              	
+ 122              	# followed by FAT1, FAT2, RootDirTable actual bytes
+GAS LISTING ipl10.s 			page 4
 
 
 DEFINED SYMBOLS
-               ipl.s:4      *ABS*:000000000000000a CYLS
-               ipl.s:27     .text:0000000000000050 entry
-               ipl.s:41     .text:0000000000000065 readloop
-               ipl.s:43     .text:0000000000000068 retry
-               ipl.s:64     .text:0000000000000085 next
-               ipl.s:96     .text:00000000000000ab error
-               ipl.s:111    .text:00000000000000c3 msg
-               ipl.s:98     .text:00000000000000ae putloop
-               ipl.s:107    .text:00000000000000c0 fin
+             ipl10.s:4      *ABS*:000000000000000a CYLS
+             ipl10.s:27     .text:0000000000000050 entry
+             ipl10.s:41     .text:0000000000000065 readloop
+             ipl10.s:43     .text:0000000000000068 retry
+             ipl10.s:64     .text:0000000000000085 next
+             ipl10.s:97     .text:00000000000000af error
+             ipl10.s:112    .text:00000000000000c7 msg
+             ipl10.s:99     .text:00000000000000b2 putloop
+             ipl10.s:108    .text:00000000000000c4 fin
 
 NO UNDEFINED SYMBOLS

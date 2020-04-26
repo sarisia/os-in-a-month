@@ -2,8 +2,8 @@ QEMU=qemu-system-i386.exe
 
 all: clean helloos.img
 
-ipl.o: ipl.s
-	as -a -o ipl.o ipl.s > ipl.lst
+ipl.o: ipl10.s
+	as -a -o ipl.o ipl10.s > ipl.lst
 
 ipl.bin: ipl.o ipl.lds
 	ld -T ipl.lds --oformat=binary -o ipl.bin ipl.o

@@ -105,7 +105,7 @@ GAS LISTING ipl10.s 			page 1
   91              	    # 0x8000 に最初のセクタが読み込まれる (まだ読み込んでいないが)
   92              	    # haribote.sys は (mkfs.fat + mount でイメージを作ると) イメージ上の 0x4400 に
   93              	    # ので、haribote.sys が配置されているのはメモリ上の 0x8000 + 0x4400 = 0xc400
-  94 00a8 882EFF00 	    mov %ch, 0x0ff
+  94 00a8 882EF00F 	    mov %ch, 0x0ff0
   95 00ac E90000   	    jmp 0xc400
   96              	
   97              	error:

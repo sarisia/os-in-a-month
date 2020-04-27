@@ -91,7 +91,7 @@ next:
     # 0x8000 に最初のセクタが読み込まれる (まだ読み込んでいないが)
     # haribote.sys は (mkfs.fat + mount でイメージを作ると) イメージ上の 0x4400 に配置される
     # ので、haribote.sys が配置されているのはメモリ上の 0x8000 + 0x4400 = 0xc400
-    mov %ch, 0x0ff
+    mov %ch, 0x0ff0
     jmp 0xc400
 
 error:

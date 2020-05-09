@@ -15,7 +15,7 @@ GAS LISTING ipl10.s 			page 1
   11 000e 0100     	    .word 1 # BPB_RsvdSecCnt 予約領域セクタ数 ブートセクタ含む
   12 0010 02       	    .byte 2 # BPB_NumFATs
   13 0011 E000     	    .word 224 # BPB_RootEntCnt: root directory size
-  14 0013 400B     	    .word 2880 # BPB_TotSec16: drive size
+  14 0013 0000     	    .word 0 # BPB_TotSec16: drive size
   15 0015 F0       	    .byte 0xf0 # BPB_Media
   16 0016 0900     	    .word 9 # BPB_FATSz16 (sector)
   17 0018 1200     	    .word 18 # BPB_SecPerTrk: sectors per track
@@ -105,44 +105,48 @@ GAS LISTING ipl10.s 			page 1
   91              	    # 0x8000 に最初のセクタが読み込まれる (まだ読み込んでいないが)
   92              	    # haribote.sys は (mkfs.fat + mount でイメージを作ると) イメージ上の 0x4400 に
   93              	    # ので、haribote.sys が配置されているのはメモリ上の 0x8000 + 0x4400 = 0xc400
-  94 00a8 882EF00F 	    mov %ch, 0x0ff0
-  95 00ac E90000   	    jmp 0xc400
-  96              	
-  97              	error:
-  98 00af BE0000   	    mov $msg, %si
-  99              	putloop:
- 100 00b2 8A04     	    mov (%si), %al # al: 8bit accumulator low
- 101 00b4 83C601   	    add $1, %si
- 102 00b7 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
- 103 00b9 7409     	    je fin
- 104 00bb B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
- 105 00bd BB0F00   	    mov $15, %bx # bx: 16bit base register
- 106 00c0 CD10     	    int $0x10 # bios interrupt call
+  94              	
+  95              	    # とりあえず本のメモリマップに合わせるために mformat, mcopy でやる
+  96              	    # 後で mkfs.fat + mount に戻したい
+  97              	    # この場合は 0x8000 + 0x4200 = 0xc200
+  98 00a8 882EF00F 	    mov %ch, 0x0ff0
+  99 00ac E90000   	    jmp 0xc200
+ 100              	
+ 101              	error:
+ 102 00af BE0000   	    mov $msg, %si
+ 103              	putloop:
+ 104 00b2 8A04     	    mov (%si), %al # al: 8bit accumulator low
+ 105 00b4 83C601   	    add $1, %si
+ 106 00b7 3C00     	    cmp $0, %al # cmp overwrites flag register  # if %al is 0, stop output chars
 GAS LISTING ipl10.s 			page 3
 
 
- 107 00c2 EBEE     	    jmp putloop
- 108              	fin:
- 109 00c4 F4       	    hlt
- 110 00c5 EBFD     	    jmp fin
- 111              	
- 112              	msg:
- 113 00c7 0A0A     	    .ascii "\n\n"
- 114 00c9 6C6F6164 	    .ascii "load error!"
- 114      20657272 
- 114      6F7221
- 115 00d4 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
- 116 00d6 00       	    .byte 0 # terminate character
- 117              	
- 118              	# finalize boot sector
- 119 00d7 00000000 	    .org 0x01fe # 0x7dfe ではない
- 119      00000000 
- 119      00000000 
- 119      00000000 
- 119      00000000 
- 120 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
+ 107 00b9 7409     	    je fin
+ 108 00bb B40E     	    mov $0x0e, %ah # 8bit ah: accumlator high # bios output char function
+ 109 00bd BB0F00   	    mov $15, %bx # bx: 16bit base register
+ 110 00c0 CD10     	    int $0x10 # bios interrupt call
+ 111 00c2 EBEE     	    jmp putloop
+ 112              	fin:
+ 113 00c4 F4       	    hlt
+ 114 00c5 EBFD     	    jmp fin
+ 115              	
+ 116              	msg:
+ 117 00c7 0A0A     	    .ascii "\n\n"
+ 118 00c9 6C6F6164 	    .ascii "load error!"
+ 118      20657272 
+ 118      6F7221
+ 119 00d4 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
+ 120 00d6 00       	    .byte 0 # terminate character
  121              	
- 122              	# followed by FAT1, FAT2, RootDirTable actual bytes
+ 122              	# finalize boot sector
+ 123 00d7 00000000 	    .org 0x01fe # 0x7dfe ではない
+ 123      00000000 
+ 123      00000000 
+ 123      00000000 
+ 123      00000000 
+ 124 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
+ 125              	
+ 126              	# followed by FAT1, FAT2, RootDirTable actual bytes
 GAS LISTING ipl10.s 			page 4
 
 
@@ -152,9 +156,9 @@ DEFINED SYMBOLS
              ipl10.s:41     .text:0000000000000065 readloop
              ipl10.s:43     .text:0000000000000068 retry
              ipl10.s:64     .text:0000000000000085 next
-             ipl10.s:97     .text:00000000000000af error
-             ipl10.s:112    .text:00000000000000c7 msg
-             ipl10.s:99     .text:00000000000000b2 putloop
-             ipl10.s:108    .text:00000000000000c4 fin
+             ipl10.s:101    .text:00000000000000af error
+             ipl10.s:116    .text:00000000000000c7 msg
+             ipl10.s:103    .text:00000000000000b2 putloop
+             ipl10.s:112    .text:00000000000000c4 fin
 
 NO UNDEFINED SYMBOLS

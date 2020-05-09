@@ -6,3 +6,7 @@ _*
 *.o
 *.bin
 *.sys
+# *.lst
+# *.map
+*.hrb
+# bootpack.s

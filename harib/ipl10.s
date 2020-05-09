@@ -11,7 +11,7 @@
     .word 1 # BPB_RsvdSecCnt 予約領域セクタ数 ブートセクタ含む
     .byte 2 # BPB_NumFATs
     .word 224 # BPB_RootEntCnt: root directory size
-    .word 2880 # BPB_TotSec16: drive size
+    .word 0 # BPB_TotSec16: drive size
     .byte 0xf0 # BPB_Media
     .word 9 # BPB_FATSz16 (sector)
     .word 18 # BPB_SecPerTrk: sectors per track
@@ -91,8 +91,12 @@ next:
     # 0x8000 に最初のセクタが読み込まれる (まだ読み込んでいないが)
     # haribote.sys は (mkfs.fat + mount でイメージを作ると) イメージ上の 0x4400 に配置される
     # ので、haribote.sys が配置されているのはメモリ上の 0x8000 + 0x4400 = 0xc400
+
+    # とりあえず本のメモリマップに合わせるために mformat, mcopy でやる
+    # 後で mkfs.fat + mount に戻したい
+    # この場合は 0x8000 + 0x4200 = 0xc200
     mov %ch, 0x0ff0
-    jmp 0xc400
+    jmp 0xc200
 
 error:
     mov $msg, %si

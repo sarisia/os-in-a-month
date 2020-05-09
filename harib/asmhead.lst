@@ -1,0 +1,193 @@
+GAS LISTING asmhead.s 			page 1
+
+
+   1              	    .code16
+   2              	
+   3              	    .set BOTPAK, 0x00280000 # bootpack load destination
+   4              	    .set DSKCAC, 0x00100000 # disk cache
+   5              	    .set DSKCAC0, 0x00008000 # disc cache (real mode)
+   6              	
+   7              	    # BOOT_INFO
+   8              	    .set CYLS, 0x0ff0
+   9              	    .set LEDS, 0x0ff1
+  10              	    .set VMODE, 0x0ff2 # bit color
+  11              	    .set SCRNX, 0x0ff4 # resolution X
+  12              	    .set SCRNY, 0x0ff6 # resolution Y
+  13              	    .set VRAM, 0x0ff8 # start of graphic buffer
+  14              	
+  15 0000 B400     	    mov $0x00, %ah # AT BIOS: ビデオモード設定
+  16 0002 B013     	    mov $0x13, %al # mode: VGA 320x200 8bit color packed pixel (?)
+  17 0004 CD10     	    int $0x10
+  18              	
+  19              	    # set video configs to BOOT_INFO
+  20 0006 C606F20F 	    movb $8, VMODE
+  20      08
+  21 000b C706F40F 	    movw $320, SCRNX
+  21      4001
+  22 0011 C706F60F 	    movw $200, SCRNY
+  22      C800
+  23 0017 66C706F8 	    movl $0x000a0000, VRAM
+  23      0F00000A 
+  23      00
+  24              	
+  25              	    # get keyboard state from BIOS
+  26 0020 B402     	    mov $0x02, %ah
+  27 0022 CD16     	    int $0x16
+  28 0024 A2F10F   	    mov %al, LEDS
+  29              	
+  30              	# ここからの解説は後回しらしい また来る
+  31              	    # prevent PIC from interrupt
+  32              	    # in PC/AT specification, do this before CLI
+  33              	    # or get hanged up
+  34              	    # we do PIC initialize later
+  35 0027 B0FF     	    mov $0xff, %al
+  36 0029 E621     	    out %al, $0x21 # out: write %AL to serial port
+  37 002b 90       	    nop
+  38 002c E6A1     	    out %al, $0xa1
+  39              	
+  40              	    # set A20GATE to make memory over 1MB accessible from CPU
+  41 002e E8AE00   	    call waitkbdout
+  42 0031 B0D1     	    mov $0xd1, %al
+  43 0033 E664     	    out %al, $0x64
+  44 0035 E8A700   	    call waitkbdout
+  45 0038 B0DF     	    mov $0xdf, %al # enable A20
+  46 003a E660     	    out %al, $0x60
+  47 003c E8A000   	    call waitkbdout
+  48              	
+  49              	# enable protect mode
+  50              	    .code32 # instrset i486p
+  51 003f 0F011500 	    lgdt (GDTR0) # LGDT GDTR m: load global descriptor table register
+  51      000000
+GAS LISTING asmhead.s 			page 2
+
+
+  52 0046 0F20C0   	    mov %cr0, %eax # cr0: control register 0
+  53 0049 25FFFFFF 	    and $0x7fffffff, %eax # set bit31 to 0
+  53      7F
+  54 004e 83C801   	    or $0x00000001, %eax # set bit0 to 1
+  55 0051 0F22C0   	    mov %eax, %cr0
+  56 0054 EB00     	    jmp pipelineflush
+  57              	
+  58              	pipelineflush:
+  59 0056 66B80800 	    mov $1*8, %ax # これ大丈夫？
+  60 005a 8ED8     	    mov %ax, %ds
+  61 005c 8EC0     	    mov %ax, %es
+  62 005e 8EE0     	    mov %ax, %fs
+  63 0060 8EE8     	    mov %ax, %gs
+  64 0062 8ED0     	    mov %ax, %ss
+  65              	
+  66              	    # transfer bootpack
+  67 0064 8B350000 	    mov bootpack, %esi # from
+  67      0000
+  68 006a 8B3D0000 	    mov BOTPAK, %edi # to
+  68      2800
+  69 0070 B9000002 	    mov $512*1024/4, %ecx # 1024 sector
+  69      00
+  70 0075 E86C0000 	    call memcpy
+  70      00
+  71              	
+  72              	    # transfer disc data
+  73              	    # boot sector
+  74 007a BE007C00 	    mov $0x7c00, %esi # from
+  74      00
+  75 007f 8B3D0000 	    mov DSKCAC, %edi # to
+  75      1000
+  76 0085 B9800000 	    mov $512/4, %ecx
+  76      00
+  77 008a E8570000 	    call memcpy
+  77      00
+  78              	
+  79              	    # all remained
+  80 008f 8B350082 	    mov DSKCAC0+512, %esi # from
+  80      0000
+  81 0095 8B3D0002 	    mov DSKCAC+512, %edi # to
+  81      1000
+  82 009b B9000000 	    mov $0, %ecx
+  82      00
+  83 00a0 8A0DF00F 	    movb (CYLS), %cl # ecx -> ch と cl
+  83      0000
+  84 00a6 69C90012 	    imul $512*18*2/4, %ecx # imul: signed multiply
+  84      0000
+  85 00ac 81E98000 	    sub $512/4, %ecx # subtract ipl size
+  85      0000
+  86 00b2 E82F0000 	    call memcpy
+  86      00
+  87              	
+  88              	# asmhead done, start bootpack
+  89 00b7 8B1D0000 	    mov BOTPAK, %ebx
+  89      2800
+  90 00bd 8B4B10   	    mov 16(%ebx), %ecx
+  91 00c0 83C103   	    add $3, %ecx
+GAS LISTING asmhead.s 			page 3
+
+
+  92 00c3 C1E902   	    shr $2, %ecx # shr: shift right 2 == div 4
+  93 00c6 740D     	    jz skip # nothing to transfer
+  94 00c8 8B7314   	    mov 20(%ebx), %esi # from
+  95 00cb 01DE     	    add %ebx, %esi
+  96 00cd 8B7B0C   	    mov 12(%ebx), %edi
+  97 00d0 E8110000 	    call memcpy
+  97      00
+  98              	skip:
+  99 00d5 8B630C   	    mov 12(%ebx), %esp # stack initial value
+ 100              	    # GDTで設定したセグメントの1bへジャンプ
+ 101              	    # 1b には hrb 形式でのエントリーポイントがある
+ 102              	    # $2*8 -> RPL=0 (ring 0), TI=0 (GDT), index=0x10 (entry 2)
+ 103 00d8 EA1B0000 	    ljmp $2*8, $0x0000001b # Immediate form long jumps
+ 103      001000
+ 104              	
+ 105              	waitkbdout:
+ 106 00df E464     	    in $0x64, %al # in AL imm8: input from port
+ 107 00e1 2402     	    and $0x02, %al
+ 108 00e3 75FA     	    jnz waitkbdout
+ 109 00e5 C3       	    ret
+ 110              	
+ 111              	memcpy:
+ 112 00e6 8B06     	    mov (%esi), %eax
+ 113 00e8 83C604   	    add $4, %esi
+ 114 00eb 8907     	    mov %eax, (%edi)
+ 115 00ed 83C704   	    add $4, %edi
+ 116 00f0 83E901   	    sub $1, %ecx
+ 117 00f3 75F1     	    jnz memcpy
+ 118 00f5 C3       	    ret
+ 119              	
+ 120 00f6 662E0F1F 	    .align 16 # location counter を16の倍数まで進める (zero padding)
+ 120      84000000 
+ 120      0000
+ 121              	GDT0:
+ 122 0100 00000000 	    .skip 8 # intel needs null descriptor
+ 122      00000000 
+ 123              	    # 64 bit per entry (segment descriptor)
+ 124 0108 FFFF0000 	    .word 0xffff, 0x0000, 0x9200, 0x00cf # r/w able segment 32bit
+ 124      0092CF00 
+ 125 0110 FFFF0000 	    .word 0xffff, 0x0000, 0x9a28, 0x0047 # executable segment 32bit (bootpack)
+ 125      289A4700 
+ 126 0118 0000     	    .word 0
+ 127              	GDTR0:
+ 128 011a 1700     	    .word 8*3-1 # 1 引けってたしかに書いてある
+ 129 011c 00000000 	    .int GDT0 # .int == .long (32bit)
+ 130              	
+ 131              	    .align 16
+ 132              	bootpack:
+GAS LISTING asmhead.s 			page 4
+
+
+DEFINED SYMBOLS
+           asmhead.s:3      *ABS*:0000000000280000 BOTPAK
+           asmhead.s:4      *ABS*:0000000000100000 DSKCAC
+           asmhead.s:5      *ABS*:0000000000008000 DSKCAC0
+           asmhead.s:8      *ABS*:0000000000000ff0 CYLS
+           asmhead.s:9      *ABS*:0000000000000ff1 LEDS
+           asmhead.s:10     *ABS*:0000000000000ff2 VMODE
+           asmhead.s:11     *ABS*:0000000000000ff4 SCRNX
+           asmhead.s:12     *ABS*:0000000000000ff6 SCRNY
+           asmhead.s:13     *ABS*:0000000000000ff8 VRAM
+           asmhead.s:105    .text:00000000000000df waitkbdout
+           asmhead.s:127    .text:000000000000011a GDTR0
+           asmhead.s:58     .text:0000000000000056 pipelineflush
+           asmhead.s:132    .text:0000000000000120 bootpack
+           asmhead.s:111    .text:00000000000000e6 memcpy
+           asmhead.s:98     .text:00000000000000d5 skip
+           asmhead.s:121    .text:0000000000000100 GDT0
+
+NO UNDEFINED SYMBOLS

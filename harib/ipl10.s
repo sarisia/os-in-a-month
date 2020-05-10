@@ -117,7 +117,6 @@ msg:
     .ascii "\n\n"
     .ascii "load error!"
     .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
-    .byte 0 # terminate character
 
 # finalize boot sector
     .org 0x01fe # 0x7dfe ではない

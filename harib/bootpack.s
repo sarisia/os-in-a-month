@@ -10,10 +10,23 @@ HariMain:
 	.cfi_offset 5, -8
 	movl	%esp, %ebp
 	.cfi_def_cfa_register 5
-	subl	$8, %esp
+	pushl	%ebx
+	pushl	%edx
+	.cfi_offset 3, -12
+	movl	$655360, %ebx
 .L2:
+	pushl	%eax
+	pushl	%eax
+	pushl	$12
+	pushl	%ebx
+	incl	%ebx
+	call	_write_mem8
+	addl	$16, %esp
+	cmpl	$720896, %ebx
+	jne	.L2
+.L3:
 	call	_io_hlt
-	jmp	.L2
+	jmp	.L3
 	.cfi_endproc
 .LFE0:
 	.size	HariMain, .-HariMain

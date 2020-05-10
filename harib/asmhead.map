@@ -1,0 +1,20 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+                0x000000000000c200                . = 0xc200
+LOAD asmhead.o
+OUTPUT(asmhead.bin binary)
+
+.text           0x000000000000c200      0x130
+ .text          0x000000000000c200      0x130 asmhead.o
+
+.data           0x000000000000c330        0x0
+ .data          0x000000000000c330        0x0 asmhead.o
+
+.bss            0x000000000000c330        0x0
+ .bss           0x000000000000c330        0x0 asmhead.o

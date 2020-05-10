@@ -136,17 +136,16 @@ GAS LISTING ipl10.s 			page 1
  118      20657272 
  118      6F7221
  119 00d4 0A00     	    .asciz "\n" # https://sourceware.org/binutils/docs/as/Asciz.html#Asciz
- 120 00d6 00       	    .byte 0 # terminate character
- 121              	
- 122              	# finalize boot sector
- 123 00d7 00000000 	    .org 0x01fe # 0x7dfe ではない
- 123      00000000 
- 123      00000000 
- 123      00000000 
- 123      00000000 
- 124 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
- 125              	
- 126              	# followed by FAT1, FAT2, RootDirTable actual bytes
+ 120              	
+ 121              	# finalize boot sector
+ 122 00d6 00000000 	    .org 0x01fe # 0x7dfe ではない
+ 122      00000000 
+ 122      00000000 
+ 122      00000000 
+ 122      00000000 
+ 123 01fe 55AA     	    .byte 0x55, 0xaa # BS_BootSign
+ 124              	
+ 125              	# followed by FAT1, FAT2, RootDirTable actual bytes
 GAS LISTING ipl10.s 			page 4
 
 

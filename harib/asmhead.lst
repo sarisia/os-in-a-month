@@ -45,131 +45,133 @@ GAS LISTING asmhead.s 			page 1
   37 002b 90       	    nop
   38 002c E6A1     	    out %al, $0xa1
   39              	
-  40              	    # set A20GATE to make memory over 1MB accessible from CPU
-  41 002e E8AE00   	    call waitkbdout
-  42 0031 B0D1     	    mov $0xd1, %al
-  43 0033 E664     	    out %al, $0x64
-  44 0035 E8A700   	    call waitkbdout
-  45 0038 B0DF     	    mov $0xdf, %al # enable A20
-  46 003a E660     	    out %al, $0x60
-  47 003c E8A000   	    call waitkbdout
-  48              	
-  49              	# enable protect mode
-  50              	    # .arch i486 とかにすれば変な命令に対して警告してくれるようにもなる
-  51              	    .code32 # instrset i486p
-  52 003f 0F011500 	    lgdt (GDTR0) # LGDT GDTR m: load global descriptor table register
+  40 002e FA       	    cli # clear interrupt flag
+  41              	
+  42              	    # set A20GATE to make memory over 1MB accessible from CPU
+  43 002f E8B500   	    call waitkbdout
+  44 0032 B0D1     	    mov $0xd1, %al
+  45 0034 E664     	    out %al, $0x64
+  46 0036 E8AE00   	    call waitkbdout
+  47 0039 B0DF     	    mov $0xdf, %al # enable A20
+  48 003b E660     	    out %al, $0x60
+  49 003d E8A700   	    call waitkbdout
+  50              	
+  51              	# enable protect mode
+  52              	    # .arch i486 とかにすれば変な命令に対して警告してくれるようにもなる
 GAS LISTING asmhead.s 			page 2
 
 
-  52      000000
-  53 0046 0F20C0   	    mov %cr0, %eax # cr0: control register 0
-  54 0049 25FFFFFF 	    and $0x7fffffff, %eax # set bit31 to 0
-  54      7F
-  55 004e 83C801   	    or $0x00000001, %eax # set bit0 to 1
-  56 0051 0F22C0   	    mov %eax, %cr0
-  57 0054 EB00     	    jmp pipelineflush
-  58              	
-  59              	pipelineflush:
-  60 0056 66B80800 	    mov $1*8, %ax # これ大丈夫？
-  61 005a 8ED8     	    mov %ax, %ds
-  62 005c 8EC0     	    mov %ax, %es
-  63 005e 8EE0     	    mov %ax, %fs
-  64 0060 8EE8     	    mov %ax, %gs
-  65 0062 8ED0     	    mov %ax, %ss
-  66              	
-  67              	    # transfer bootpack
-  68 0064 8B350000 	    mov bootpack, %esi # from
-  68      0000
-  69 006a 8B3D0000 	    mov BOTPAK, %edi # to
-  69      2800
-  70 0070 B9000002 	    mov $512*1024/4, %ecx # 1024 sector
-  70      00
-  71 0075 E86C0000 	    call memcpy
-  71      00
-  72              	
-  73              	    # transfer disc data
-  74              	    # boot sector
-  75 007a BE007C00 	    mov $0x7c00, %esi # from
-  75      00
-  76 007f 8B3D0000 	    mov DSKCAC, %edi # to
-  76      1000
-  77 0085 B9800000 	    mov $512/4, %ecx
-  77      00
-  78 008a E8570000 	    call memcpy
-  78      00
-  79              	
-  80              	    # all remained
-  81 008f 8B350082 	    mov DSKCAC0+512, %esi # from
-  81      0000
-  82 0095 8B3D0002 	    mov DSKCAC+512, %edi # to
-  82      1000
-  83 009b B9000000 	    mov $0, %ecx
-  83      00
-  84 00a0 8A0DF00F 	    movb (CYLS), %cl # ecx -> ch と cl
+  53              	    # .code32 # これはバグる！
+  54              	    .arch i486 # instrset i486p
+  55 0040 0F011600 	    lgdt (GDTR0) # LGDT GDTR m: load global descriptor table register
+  55      00
+  56 0045 0F20C0   	    mov %cr0, %eax # cr0: control register 0
+  57 0048 6625FFFF 	    and $0x7fffffff, %eax # set bit31 to 0
+  57      FF7F
+  58 004e 6683C801 	    or $0x00000001, %eax # set bit0 to 1
+  59 0052 0F22C0   	    mov %eax, %cr0
+  60 0055 EB00     	    jmp pipelineflush
+  61              	
+  62              	pipelineflush:
+  63 0057 B80800   	    mov $1*8, %ax # これ大丈夫？
+  64 005a 8ED8     	    mov %ax, %ds
+  65 005c 8EC0     	    mov %ax, %es
+  66 005e 8EE0     	    mov %ax, %fs
+  67 0060 8EE8     	    mov %ax, %gs
+  68 0062 8ED0     	    mov %ax, %ss
+  69              	
+  70              	    # transfer bootpack
+  71 0064 66BE0000 	    mov $bootpack, %esi # from
+  71      0000
+  72 006a 66BF0000 	    mov $BOTPAK, %edi # to
+  72      2800
+  73 0070 66B90000 	    mov $512*1024/4, %ecx # 1024 sector
+  73      0200
+  74 0076 E87500   	    call memcpy
+  75              	
+  76              	    # transfer disc data
+  77              	    # boot sector
+  78 0079 66BE007C 	    mov $0x7c00, %esi # from
+  78      0000
+  79 007f 66BF0000 	    mov $DSKCAC, %edi # to
+  79      1000
+  80 0085 66B98000 	    mov $512/4, %ecx
+  80      0000
+  81 008b E86000   	    call memcpy
+  82              	
+  83              	    # all remained
+  84 008e 66BE0082 	    mov $DSKCAC0+512, %esi # from
   84      0000
-  85 00a6 69C90012 	    imul $512*18*2/4, %ecx # imul: signed multiply
-  85      0000
-  86 00ac 81E98000 	    sub $512/4, %ecx # subtract ipl size
+  85 0094 66BF0002 	    mov $DSKCAC+512, %edi # to
+  85      1000
+  86 009a 66B90000 	    mov $0, %ecx
   86      0000
-  87 00b2 E82F0000 	    call memcpy
-  87      00
-  88              	
-  89              	# asmhead done, start bootpack
-  90 00b7 8B1D0000 	    mov BOTPAK, %ebx
-  90      2800
-  91 00bd 8B4B10   	    mov 16(%ebx), %ecx
+  87 00a0 8A0EF00F 	    movb CYLS, %cl # ecx -> ch と cl
+  88 00a4 6669C900 	    imul $512*18*2/4, %ecx # imul: signed multiply
+  88      120000
+  89 00ab 6681E980 	    sub $512/4, %ecx # subtract ipl size
+  89      000000
+  90 00b2 E83900   	    call memcpy
+  91              	
+  92              	# asmhead done, start bootpack
+  93 00b5 66BB0000 	    mov $BOTPAK, %ebx
+  93      2800
+  94 00bb 67668B4B 	    mov 16(%ebx), %ecx
+  94      10
 GAS LISTING asmhead.s 			page 3
 
 
-  92 00c0 83C103   	    add $3, %ecx
-  93 00c3 C1E902   	    shr $2, %ecx # shr: shift right 2 == div 4
-  94 00c6 740D     	    jz skip # nothing to transfer
-  95 00c8 8B7314   	    mov 20(%ebx), %esi # from
-  96 00cb 01DE     	    add %ebx, %esi
-  97 00cd 8B7B0C   	    mov 12(%ebx), %edi
-  98 00d0 E8110000 	    call memcpy
-  98      00
-  99              	skip:
- 100 00d5 8B630C   	    mov 12(%ebx), %esp # stack initial value
- 101              	    # GDTで設定したセグメントの1bへジャンプ
- 102              	    # 1b には hrb 形式でのエントリーポイントがある
- 103              	    # $2*8 -> RPL=0 (ring 0), TI=0 (GDT), index=0x10 (entry 2)
- 104 00d8 EA1B0000 	    ljmp $2*8, $0x0000001b # Immediate form long jumps
- 104      001000
- 105              	
- 106              	waitkbdout:
- 107 00df E464     	    in $0x64, %al # in AL imm8: input from port
- 108 00e1 2402     	    and $0x02, %al
- 109 00e3 75FA     	    jnz waitkbdout
- 110 00e5 C3       	    ret
- 111              	
- 112              	memcpy:
- 113 00e6 8B06     	    mov (%esi), %eax
- 114 00e8 83C604   	    add $4, %esi
- 115 00eb 8907     	    mov %eax, (%edi)
- 116 00ed 83C704   	    add $4, %edi
- 117 00f0 83E901   	    sub $1, %ecx
- 118 00f3 75F1     	    jnz memcpy
- 119 00f5 C3       	    ret
- 120              	
- 121 00f6 662E0F1F 	    .align 16 # location counter を16の倍数まで進める (zero padding)
- 121      84000000 
- 121      0000
- 122              	GDT0:
- 123 0100 00000000 	    .skip 8 # intel needs null descriptor
- 123      00000000 
- 124              	    # 64 bit per entry (segment descriptor)
- 125 0108 FFFF0000 	    .word 0xffff, 0x0000, 0x9200, 0x00cf # r/w able segment 32bit
- 125      0092CF00 
- 126 0110 FFFF0000 	    .word 0xffff, 0x0000, 0x9a28, 0x0047 # executable segment 32bit (bootpack)
- 126      289A4700 
- 127 0118 0000     	    .word 0
- 128              	GDTR0:
- 129 011a 1700     	    .word 8*3-1 # 1 引けってたしかに書いてある
- 130 011c 00000000 	    .int GDT0 # .int == .long (32bit)
- 131              	
- 132              	    .align 16
- 133              	bootpack:
+  95 00c0 6683C103 	    add $3, %ecx
+  96 00c4 66C1E902 	    shr $2, %ecx # shr: shift right 2 == div 4
+  97 00c8 7410     	    jz skip # nothing to transfer
+  98 00ca 67668B73 	    mov 20(%ebx), %esi # from
+  98      14
+  99 00cf 6601DE   	    add %ebx, %esi
+ 100 00d2 67668B7B 	    mov 12(%ebx), %edi
+ 100      0C
+ 101 00d7 E81400   	    call memcpy
+ 102              	skip:
+ 103 00da 67668B63 	    mov 12(%ebx), %esp # stack initial value
+ 103      0C
+ 104              	    # GDTで設定したセグメントの1bへジャンプ
+ 105              	    # 1b には hrb 形式でのエントリーポイントがある
+ 106              	    # $2*8 -> RPL=0 (ring 0), TI=0 (GDT), index=0x10 (entry 2)
+ 107 00df 66EA1B00 	    ljmpl $2*8, $0x0000001b # Immediate form long jumps
+ 107      00001000 
+ 108              	
+ 109              	waitkbdout:
+ 110 00e7 E464     	    in $0x64, %al # in AL imm8: input from port
+ 111 00e9 2402     	    and $0x02, %al
+ 112 00eb 75FA     	    jnz waitkbdout
+ 113 00ed C3       	    ret
+ 114              	
+ 115              	memcpy:
+ 116 00ee 67668B06 	    mov (%esi), %eax
+ 117 00f2 6683C604 	    add $4, %esi
+ 118 00f6 67668907 	    mov %eax, (%edi)
+ 119 00fa 6683C704 	    add $4, %edi
+ 120 00fe 6683E901 	    sub $1, %ecx
+ 121 0102 75EA     	    jnz memcpy
+ 122 0104 C3       	    ret
+ 123              	
+ 124 0105 00000000 	    .align 16, 0 # location counter を16の倍数まで進める (zero padding)
+ 124      00000000 
+ 124      000000
+ 125              	GDT0:
+ 126 0110 00000000 	    .skip 8 # intel needs null descriptor
+ 126      00000000 
+ 127              	    # 64 bit per entry (segment descriptor)
+ 128 0118 FFFF0000 	    .word 0xffff, 0x0000, 0x9200, 0x00cf # r/w able segment 32bit
+ 128      0092CF00 
+ 129 0120 FFFF0000 	    .word 0xffff, 0x0000, 0x9a28, 0x0047 # executable segment 32bit (bootpack)
+ 129      289A4700 
+ 130 0128 0000     	    .word 0
+ 131              	GDTR0:
+ 132 012a 1700     	    .word 8*3-1 # 1 引けってたしかに書いてある
+ 133 012c 00000000 	    .int GDT0 # .int == .long (32bit)
+ 134              	
+ 135              	    .align 16
+ 136              	bootpack:
 GAS LISTING asmhead.s 			page 4
 
 
@@ -183,12 +185,12 @@ DEFINED SYMBOLS
            asmhead.s:11     *ABS*:0000000000000ff4 SCRNX
            asmhead.s:12     *ABS*:0000000000000ff6 SCRNY
            asmhead.s:13     *ABS*:0000000000000ff8 VRAM
-           asmhead.s:106    .text:00000000000000df waitkbdout
-           asmhead.s:128    .text:000000000000011a GDTR0
-           asmhead.s:59     .text:0000000000000056 pipelineflush
-           asmhead.s:133    .text:0000000000000120 bootpack
-           asmhead.s:112    .text:00000000000000e6 memcpy
-           asmhead.s:99     .text:00000000000000d5 skip
-           asmhead.s:122    .text:0000000000000100 GDT0
+           asmhead.s:109    .text:00000000000000e7 waitkbdout
+           asmhead.s:131    .text:000000000000012a GDTR0
+           asmhead.s:62     .text:0000000000000057 pipelineflush
+           asmhead.s:136    .text:0000000000000130 bootpack
+           asmhead.s:115    .text:00000000000000ee memcpy
+           asmhead.s:102    .text:00000000000000da skip
+           asmhead.s:125    .text:0000000000000110 GDT0
 
 NO UNDEFINED SYMBOLS

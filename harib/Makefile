@@ -6,13 +6,13 @@ ipl.o: ipl10.s
 	as -a -o ipl.o ipl10.s > ipl.lst
 
 ipl.bin: ipl.o ipl.lds
-	ld -T ipl.lds --oformat=binary -o ipl.bin ipl.o
+	ld -M -T ipl.lds --oformat=binary -o ipl.bin ipl.o > ipl.map
 
 asmhead.o: asmhead.s
 	as -a -o asmhead.o asmhead.s > asmhead.lst
 
 asmhead.bin: asmhead.o
-	ld -T asmhead.lds --oformat=binary -o asmhead.bin asmhead.o
+	ld -M -T asmhead.lds --oformat=binary -o asmhead.bin asmhead.o > asmhead.map
 
 bootpack.s: bootpack.c
 	gcc -fno-pie -S -m32 -Os -Wall -o bootpack.s bootpack.c

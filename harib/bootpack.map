@@ -1,7 +1,7 @@
 
 Discarded input sections
 
- .eh_frame      0x0000000000000000       0x34 bootpack.o
+ .eh_frame      0x0000000000000000       0x38 bootpack.o
 
 Memory Configuration
 
@@ -26,16 +26,17 @@ Linker script and memory map
  .data          0x0000000000000024        0x0 bootpack.o
  .data          0x0000000000000024        0x0 asmfunc.o
 
-.text           0x0000000000000024        0xf
+.text           0x0000000000000024       0x34
  *(.text)
- .text          0x0000000000000024        0xd bootpack.o
+ .text          0x0000000000000024       0x27 bootpack.o
                 0x0000000000000024                HariMain
- .text          0x0000000000000031        0x2 asmfunc.o
-                0x0000000000000031                _io_hlt
+ .text          0x000000000000004b        0xd asmfunc.o
+                0x000000000000004b                _io_hlt
+                0x000000000000004d                _write_mem8
 
-.bss            0x0000000000000033        0x0
- .bss           0x0000000000000033        0x0 bootpack.o
- .bss           0x0000000000000033        0x0 asmfunc.o
+.bss            0x0000000000000058        0x0
+ .bss           0x0000000000000058        0x0 bootpack.o
+ .bss           0x0000000000000058        0x0 asmfunc.o
 
 /DISCARD/
  *(.eh_frame)

@@ -37,6 +37,8 @@
     nop
     out %al, $0xa1
 
+    cli # clear interrupt flag
+
     # set A20GATE to make memory over 1MB accessible from CPU
     call waitkbdout
     mov $0xd1, %al
@@ -48,7 +50,8 @@
 
 # enable protect mode
     # .arch i486 とかにすれば変な命令に対して警告してくれるようにもなる
-    .code32 # instrset i486p
+    # .code32 # これはバグる！
+    .arch i486 # instrset i486p
     lgdt (GDTR0) # LGDT GDTR m: load global descriptor table register
     mov %cr0, %eax # cr0: control register 0
     and $0x7fffffff, %eax # set bit31 to 0
@@ -65,29 +68,29 @@ pipelineflush:
     mov %ax, %ss
 
     # transfer bootpack
-    mov bootpack, %esi # from
-    mov BOTPAK, %edi # to
+    mov $bootpack, %esi # from
+    mov $BOTPAK, %edi # to
     mov $512*1024/4, %ecx # 1024 sector
     call memcpy
 
     # transfer disc data
     # boot sector
     mov $0x7c00, %esi # from
-    mov DSKCAC, %edi # to
+    mov $DSKCAC, %edi # to
     mov $512/4, %ecx
     call memcpy
 
     # all remained
-    mov DSKCAC0+512, %esi # from
-    mov DSKCAC+512, %edi # to
+    mov $DSKCAC0+512, %esi # from
+    mov $DSKCAC+512, %edi # to
     mov $0, %ecx
-    movb (CYLS), %cl # ecx -> ch と cl
+    movb CYLS, %cl # ecx -> ch と cl
     imul $512*18*2/4, %ecx # imul: signed multiply
     sub $512/4, %ecx # subtract ipl size
     call memcpy
 
 # asmhead done, start bootpack
-    mov BOTPAK, %ebx
+    mov $BOTPAK, %ebx
     mov 16(%ebx), %ecx
     add $3, %ecx
     shr $2, %ecx # shr: shift right 2 == div 4
@@ -101,7 +104,7 @@ skip:
     # GDTで設定したセグメントの1bへジャンプ
     # 1b には hrb 形式でのエントリーポイントがある
     # $2*8 -> RPL=0 (ring 0), TI=0 (GDT), index=0x10 (entry 2)
-    ljmp $2*8, $0x0000001b # Immediate form long jumps
+    ljmpl $2*8, $0x0000001b # Immediate form long jumps
 
 waitkbdout:
     in $0x64, %al # in AL imm8: input from port
@@ -118,7 +121,7 @@ memcpy:
     jnz memcpy
     ret
 
-    .align 16 # location counter を16の倍数まで進める (zero padding)
+    .align 16, 0 # location counter を16の倍数まで進める (zero padding)
 GDT0:
     .skip 8 # intel needs null descriptor
     # 64 bit per entry (segment descriptor)

@@ -3,7 +3,7 @@ void _write_mem8(int addr, int data);
 
 void HariMain(void) {
     for (int i = 0xa0000; i <= 0xaffff; i++) {
-        _write_mem8(i, 12);
+        _write_mem8(i, i & 0xf);
     }
 
     for (;;) {

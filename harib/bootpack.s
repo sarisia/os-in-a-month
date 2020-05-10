@@ -17,7 +17,9 @@ HariMain:
 .L2:
 	pushl	%eax
 	pushl	%eax
-	pushl	$12
+	movl	%ebx, %eax
+	andl	$15, %eax
+	pushl	%eax
 	pushl	%ebx
 	incl	%ebx
 	call	_write_mem8

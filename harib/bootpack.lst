@@ -21,24 +21,26 @@ GAS LISTING bootpack.s 			page 1
   17              	.L2:
   18 000a 50       		pushl	%eax
   19 000b 50       		pushl	%eax
-  20 000c 6A0C     		pushl	$12
-  21 000e 53       		pushl	%ebx
-  22 000f 43       		incl	%ebx
-  23 0010 E8FCFFFF 		call	_write_mem8
-  23      FF
-  24 0015 83C410   		addl	$16, %esp
-  25 0018 81FB0000 		cmpl	$720896, %ebx
-  25      0B00
-  26 001e 75EA     		jne	.L2
-  27              	.L3:
-  28 0020 E8FCFFFF 		call	_io_hlt
-  28      FF
-  29 0025 EBF9     		jmp	.L3
-  30              		.cfi_endproc
-  31              	.LFE0:
-  32              		.size	HariMain, .-HariMain
-  33              		.ident	"GCC: (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0"
-  34              		.section	.note.GNU-stack,"",@progbits
+  20 000c 89D8     		movl	%ebx, %eax
+  21 000e 83E00F   		andl	$15, %eax
+  22 0011 50       		pushl	%eax
+  23 0012 53       		pushl	%ebx
+  24 0013 43       		incl	%ebx
+  25 0014 E8FCFFFF 		call	_write_mem8
+  25      FF
+  26 0019 83C410   		addl	$16, %esp
+  27 001c 81FB0000 		cmpl	$720896, %ebx
+  27      0B00
+  28 0022 75E6     		jne	.L2
+  29              	.L3:
+  30 0024 E8FCFFFF 		call	_io_hlt
+  30      FF
+  31 0029 EBF9     		jmp	.L3
+  32              		.cfi_endproc
+  33              	.LFE0:
+  34              		.size	HariMain, .-HariMain
+  35              		.ident	"GCC: (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0"
+  36              		.section	.note.GNU-stack,"",@progbits
 GAS LISTING bootpack.s 			page 2
 
 

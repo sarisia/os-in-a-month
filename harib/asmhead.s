@@ -47,6 +47,7 @@
     call waitkbdout
 
 # enable protect mode
+    # .arch i486 とかにすれば変な命令に対して警告してくれるようにもなる
     .code32 # instrset i486p
     lgdt (GDTR0) # LGDT GDTR m: load global descriptor table register
     mov %cr0, %eax # cr0: control register 0

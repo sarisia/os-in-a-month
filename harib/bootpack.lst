@@ -13,13 +13,16 @@ GAS LISTING bootpack.s 			page 1
   10              		.cfi_offset 5, -8
   11 0001 89E5     		movl	%esp, %ebp
   12              		.cfi_def_cfa_register 5
-  13              	.L2:
-  14 0003 EBFE     		jmp	.L2
-  15              		.cfi_endproc
-  16              	.LFE0:
-  17              		.size	HariMain, .-HariMain
-  18              		.ident	"GCC: (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0"
-  19              		.section	.note.GNU-stack,"",@progbits
+  13 0003 83EC08   		subl	$8, %esp
+  14              	.L2:
+  15 0006 E8FCFFFF 		call	_io_hlt
+  15      FF
+  16 000b EBF9     		jmp	.L2
+  17              		.cfi_endproc
+  18              	.LFE0:
+  19              		.size	HariMain, .-HariMain
+  20              		.ident	"GCC: (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0"
+  21              		.section	.note.GNU-stack,"",@progbits
 GAS LISTING bootpack.s 			page 2
 
 
@@ -27,4 +30,5 @@ DEFINED SYMBOLS
                             *ABS*:0000000000000000 bootpack.c
           bootpack.s:5      .text:0000000000000000 HariMain
 
-NO UNDEFINED SYMBOLS
+UNDEFINED SYMBOLS
+_io_hlt

@@ -10,7 +10,9 @@ HariMain:
 	.cfi_offset 5, -8
 	movl	%esp, %ebp
 	.cfi_def_cfa_register 5
+	subl	$8, %esp
 .L2:
+	call	_io_hlt
 	jmp	.L2
 	.cfi_endproc
 .LFE0:

@@ -24,18 +24,23 @@ Linker script and memory map
 
 .data           0x0000000000000024        0x0
  .data          0x0000000000000024        0x0 bootpack.o
+ .data          0x0000000000000024        0x0 asmfunc.o
 
-.text           0x0000000000000024        0x5
+.text           0x0000000000000024        0xf
  *(.text)
- .text          0x0000000000000024        0x5 bootpack.o
+ .text          0x0000000000000024        0xd bootpack.o
                 0x0000000000000024                HariMain
+ .text          0x0000000000000031        0x2 asmfunc.o
+                0x0000000000000031                _io_hlt
 
-.bss            0x0000000000000029        0x0
- .bss           0x0000000000000029        0x0 bootpack.o
+.bss            0x0000000000000033        0x0
+ .bss           0x0000000000000033        0x0 bootpack.o
+ .bss           0x0000000000000033        0x0 asmfunc.o
 
 /DISCARD/
  *(.eh_frame)
 LOAD bootpack.o
+LOAD asmfunc.o
 OUTPUT(bootpack.hrb binary)
 
 .comment        0x0000000000000000       0x2c

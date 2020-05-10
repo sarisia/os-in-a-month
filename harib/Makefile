@@ -1,6 +1,6 @@
 QEMU=qemu-system-i386.exe
 
-all: clean helloos.img
+all: clean haribote.img
 
 ipl.o: ipl10.s
 	as -a -o ipl.o ipl10.s > ipl.lst
@@ -15,13 +15,16 @@ asmhead.bin: asmhead.o
 	ld -T asmhead.lds --oformat=binary -o asmhead.bin asmhead.o
 
 bootpack.s: bootpack.c
-	gcc -S -m32 -Os -Wall -o bootpack.s bootpack.c
+	gcc -fno-pie -S -m32 -Os -Wall -o bootpack.s bootpack.c
 
 bootpack.o: bootpack.s
 	as --32 -a -o bootpack.o bootpack.s > bootpack.lst
 
-bootpack.hrb: bootpack.o
-	ld -m elf_i386 -M --oformat=binary -T bootpack.lds -o bootpack.hrb bootpack.o > bootpack.map
+asmfunc.o: asmfunc.s
+	as --32 -a -o asmfunc.o asmfunc.s > asmfunc.lst
+
+bootpack.hrb: bootpack.o asmfunc.o
+	ld -m elf_i386 -M --oformat=binary -T bootpack.lds -o bootpack.hrb bootpack.o asmfunc.o > bootpack.map
 
 haribote.sys: asmhead.bin bootpack.hrb
 	cat asmhead.bin bootpack.hrb > haribote.sys

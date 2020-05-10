@@ -1,25 +1,55 @@
 GAS LISTING asmfunc.s 			page 1
 
 
-   1              	.code32
-   2              	
-   3              	# .text # リンカで .text はバイナリに突っ込まれる
-   4              	.global _io_hlt # _io_hlt を露出させないとリンカが bootpack.c での呼び出しとく�
-   5              	_io_hlt:
-   6 0000 F4       	    hlt
-   7 0001 C3       	    ret
-   8              	
-   9              	; .global _write_mem8
-  10              	; _write_mem8:
-  11 0002 8B4C2404 	;     mov 4(%esp), %ecx # addr
-  12 0006 8A442408 	;     mov 8(%esp), %al # data
-  13 000a 8801     	;     mov %al, (%ecx)
-  14 000c C3       	;     ret
+   1              	; .arch i486
+   2              	.code32
+   3              	
+   4              	# .text # リンカで .text はバイナリに突っ込まれる
+   5              	.global _io_hlt # _io_hlt を露出させないとリンカが bootpack.c での呼び出しとく�
+   6              	_io_hlt: # void _io_hlt()
+   7 0000 F4       	    hlt
+   8 0001 C3       	    ret
+   9              	
+  10              	.global _io_load_eflags
+  11              	_io_load_eflags: # int _io_load_eflags()
+  12 0002 9C       	    pushf # Push eFLAGS Register onto the Stack
+  13 0003 58       	    pop %eax
+  14 0004 C3       	    ret
+  15              	
+  16              	.global _io_store_eflags
+  17              	_io_store_eflags: # void _io_store_eflags(int eflags)
+  18 0005 8B442404 	    mov 4(%esp), %eax
+  19 0009 50       	    push %eax
+  20 000a 9D       	    popf # Pop Stack into eFLAGS Register
+  21 000b C3       	    ret
+  22              	
+  23              	.global _io_cli
+  24              	_io_cli: # void _io_cli()
+  25 000c FA       	    cli # Clear Interrupt Flag
+  26 000d C3       	    ret
+  27              	
+  28              	.global _io_out8
+  29              	_io_out8: # void _io_out8(int port, int data)
+  30 000e 8B542404 	    mov 4(%esp), %edx
+  31 0012 8A442408 	    mov 8(%esp), %al
+  32 0016 EE       	    out %al, %dx # OUT DX, AL: Output to Port
+  33 0017 C3       	    ret
+  34              	
+  35              	; .global _write_mem8
+  36              	; _write_mem8: # void _write_mem8(int addr, int data)
+  37 0018 8B4C2404 	;     mov 4(%esp), %ecx # addr
+  38 001c 8A442408 	;     mov 8(%esp), %al # data
+  39 0020 8801     	;     mov %al, (%ecx)
+  40 0022 C3       	;     ret
 GAS LISTING asmfunc.s 			page 2
 
 
 DEFINED SYMBOLS
-           asmfunc.s:5      .text:0000000000000000 _io_hlt
-           asmfunc.s:10     .text:0000000000000002 _write_mem8
+           asmfunc.s:6      .text:0000000000000000 _io_hlt
+           asmfunc.s:11     .text:0000000000000002 _io_load_eflags
+           asmfunc.s:17     .text:0000000000000005 _io_store_eflags
+           asmfunc.s:24     .text:000000000000000c _io_cli
+           asmfunc.s:29     .text:000000000000000e _io_out8
+           asmfunc.s:36     .text:0000000000000018 _write_mem8
 
 NO UNDEFINED SYMBOLS

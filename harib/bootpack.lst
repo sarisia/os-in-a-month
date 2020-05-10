@@ -3,42 +3,225 @@ GAS LISTING bootpack.s 			page 1
 
    1              		.file	"bootpack.c"
    2              		.text
-   3              		.globl	HariMain
-   4              		.type	HariMain, @function
-   5              	HariMain:
-   6              	.LFB0:
+   3              		.globl	set_palette
+   4              		.type	set_palette, @function
+   5              	set_palette:
+   6              	.LFB2:
    7              		.cfi_startproc
    8 0000 55       		pushl	%ebp
    9              		.cfi_def_cfa_offset 8
   10              		.cfi_offset 5, -8
-  11 0001 B800000A 		movl	$655360, %eax
-  11      00
-  12 0006 89E5     		movl	%esp, %ebp
-  13              		.cfi_def_cfa_register 5
-  14 0008 83EC08   		subl	$8, %esp
-  15              	.L2:
-  16 000b 88C2     		movb	%al, %dl
-  17 000d 40       		incl	%eax
-  18 000e 83E20F   		andl	$15, %edx
-  19 0011 8850FF   		movb	%dl, -1(%eax)
-  20 0014 3D00000B 		cmpl	$720896, %eax
-  20      00
-  21 0019 75F0     		jne	.L2
-  22              	.L3:
-  23 001b E8FCFFFF 		call	_io_hlt
-  23      FF
-  24 0020 EBF9     		jmp	.L3
-  25              		.cfi_endproc
-  26              	.LFE0:
-  27              		.size	HariMain, .-HariMain
-  28              		.ident	"GCC: (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0"
-  29              		.section	.note.GNU-stack,"",@progbits
+  11 0001 89E5     		movl	%esp, %ebp
+  12              		.cfi_def_cfa_register 5
+  13 0003 57       		pushl	%edi
+  14 0004 56       		pushl	%esi
+  15 0005 53       		pushl	%ebx
+  16 0006 83EC1C   		subl	$28, %esp
+  17              		.cfi_offset 7, -12
+  18              		.cfi_offset 6, -16
+  19              		.cfi_offset 3, -20
+  20 0009 8B5D08   		movl	8(%ebp), %ebx
+  21 000c 8B450C   		movl	12(%ebp), %eax
+  22 000f 8B7D10   		movl	16(%ebp), %edi
+  23 0012 8945E4   		movl	%eax, -28(%ebp)
+  24 0015 E8FCFFFF 		call	_io_load_eflags
+  24      FF
+  25 001a 89C6     		movl	%eax, %esi
+  26 001c E8FCFFFF 		call	_io_cli
+  26      FF
+  27 0021 51       		pushl	%ecx
+  28 0022 51       		pushl	%ecx
+  29 0023 53       		pushl	%ebx
+  30 0024 68C80300 		pushl	$968
+  30      00
+  31 0029 E8FCFFFF 		call	_io_out8
+  31      FF
+  32              	.L5:
+  33 002e 83C410   		addl	$16, %esp
+  34 0031 3B5DE4   		cmpl	-28(%ebp), %ebx
+  35 0034 7D48     		jge	.L7
+  36 0036 50       		pushl	%eax
+  37 0037 50       		pushl	%eax
+  38 0038 83C703   		addl	$3, %edi
+  39 003b 8A47FD   		movb	-3(%edi), %al
+  40 003e 43       		incl	%ebx
+  41 003f C0E802   		shrb	$2, %al
+  42 0042 0FB6C0   		movzbl	%al, %eax
+  43 0045 50       		pushl	%eax
+  44 0046 68C80300 		pushl	$968
+  44      00
+  45 004b E8FCFFFF 		call	_io_out8
+  45      FF
+  46 0050 8A47FE   		movb	-2(%edi), %al
+  47 0053 5A       		popl	%edx
+  48 0054 59       		popl	%ecx
+  49 0055 C0E802   		shrb	$2, %al
+  50 0058 0FB6C0   		movzbl	%al, %eax
+  51 005b 50       		pushl	%eax
 GAS LISTING bootpack.s 			page 2
+
+
+  52 005c 68C80300 		pushl	$968
+  52      00
+  53 0061 E8FCFFFF 		call	_io_out8
+  53      FF
+  54 0066 58       		popl	%eax
+  55 0067 8A47FF   		movb	-1(%edi), %al
+  56 006a 5A       		popl	%edx
+  57 006b C0E802   		shrb	$2, %al
+  58 006e 0FB6C0   		movzbl	%al, %eax
+  59 0071 50       		pushl	%eax
+  60 0072 68C80300 		pushl	$968
+  60      00
+  61 0077 E8FCFFFF 		call	_io_out8
+  61      FF
+  62 007c EBB0     		jmp	.L5
+  63              	.L7:
+  64 007e 897508   		movl	%esi, 8(%ebp)
+  65 0081 8D65F4   		leal	-12(%ebp), %esp
+  66 0084 5B       		popl	%ebx
+  67              		.cfi_restore 3
+  68 0085 5E       		popl	%esi
+  69              		.cfi_restore 6
+  70 0086 5F       		popl	%edi
+  71              		.cfi_restore 7
+  72 0087 5D       		popl	%ebp
+  73              		.cfi_restore 5
+  74              		.cfi_def_cfa 4, 4
+  75 0088 E9FCFFFF 		jmp	_io_store_eflags
+  75      FF
+  76              		.cfi_endproc
+  77              	.LFE2:
+  78              		.size	set_palette, .-set_palette
+  79              		.globl	init_palette
+  80              		.type	init_palette, @function
+  81              	init_palette:
+  82              	.LFB1:
+  83              		.cfi_startproc
+  84 008d 55       		pushl	%ebp
+  85              		.cfi_def_cfa_offset 8
+  86              		.cfi_offset 5, -8
+  87 008e 89E5     		movl	%esp, %ebp
+  88              		.cfi_def_cfa_register 5
+  89 0090 83EC0C   		subl	$12, %esp
+  90 0093 68000000 		pushl	$table_rgb.1434
+  90      00
+  91 0098 6A0F     		pushl	$15
+  92 009a 6A00     		pushl	$0
+  93 009c E8FCFFFF 		call	set_palette
+  93      FF
+  94 00a1 83C410   		addl	$16, %esp
+  95 00a4 C9       		leave
+  96              		.cfi_restore 5
+  97              		.cfi_def_cfa 4, 4
+  98 00a5 C3       		ret
+  99              		.cfi_endproc
+ 100              	.LFE1:
+ 101              		.size	init_palette, .-init_palette
+GAS LISTING bootpack.s 			page 3
+
+
+ 102              		.globl	HariMain
+ 103              		.type	HariMain, @function
+ 104              	HariMain:
+ 105              	.LFB0:
+ 106              		.cfi_startproc
+ 107 00a6 55       		pushl	%ebp
+ 108              		.cfi_def_cfa_offset 8
+ 109              		.cfi_offset 5, -8
+ 110 00a7 89E5     		movl	%esp, %ebp
+ 111              		.cfi_def_cfa_register 5
+ 112 00a9 83EC08   		subl	$8, %esp
+ 113 00ac E8FCFFFF 		call	init_palette
+ 113      FF
+ 114 00b1 B800000A 		movl	$655360, %eax
+ 114      00
+ 115              	.L11:
+ 116 00b6 88C2     		movb	%al, %dl
+ 117 00b8 40       		incl	%eax
+ 118 00b9 83E20F   		andl	$15, %edx
+ 119 00bc 8850FF   		movb	%dl, -1(%eax)
+ 120 00bf 3D00000B 		cmpl	$720896, %eax
+ 120      00
+ 121 00c4 75F0     		jne	.L11
+ 122              	.L12:
+ 123 00c6 E8FCFFFF 		call	_io_hlt
+ 123      FF
+ 124 00cb EBF9     		jmp	.L12
+ 125              		.cfi_endproc
+ 126              	.LFE0:
+ 127              		.size	HariMain, .-HariMain
+ 128              		.data
+ 129              		.align 32
+ 130              		.type	table_rgb.1434, @object
+ 131              		.size	table_rgb.1434, 48
+ 132              	table_rgb.1434:
+ 133 0000 00       		.byte	0
+ 134 0001 00       		.byte	0
+ 135 0002 00       		.byte	0
+ 136 0003 FF       		.byte	-1
+ 137 0004 00       		.byte	0
+ 138 0005 00       		.byte	0
+ 139 0006 00       		.byte	0
+ 140 0007 FF       		.byte	-1
+ 141 0008 00       		.byte	0
+ 142 0009 FF       		.byte	-1
+ 143 000a FF       		.byte	-1
+ 144 000b 00       		.byte	0
+ 145 000c 00       		.byte	0
+ 146 000d 00       		.byte	0
+ 147 000e FF       		.byte	-1
+ 148 000f FF       		.byte	-1
+ 149 0010 00       		.byte	0
+ 150 0011 FF       		.byte	-1
+ 151 0012 00       		.byte	0
+ 152 0013 FF       		.byte	-1
+ 153 0014 FF       		.byte	-1
+ 154 0015 FF       		.byte	-1
+GAS LISTING bootpack.s 			page 4
+
+
+ 155 0016 FF       		.byte	-1
+ 156 0017 FF       		.byte	-1
+ 157 0018 C6       		.byte	-58
+ 158 0019 C6       		.byte	-58
+ 159 001a C6       		.byte	-58
+ 160 001b 84       		.byte	-124
+ 161 001c 00       		.byte	0
+ 162 001d 00       		.byte	0
+ 163 001e 00       		.byte	0
+ 164 001f 84       		.byte	-124
+ 165 0020 00       		.byte	0
+ 166 0021 84       		.byte	-124
+ 167 0022 84       		.byte	-124
+ 168 0023 00       		.byte	0
+ 169 0024 00       		.byte	0
+ 170 0025 00       		.byte	0
+ 171 0026 84       		.byte	-124
+ 172 0027 84       		.byte	-124
+ 173 0028 00       		.byte	0
+ 174 0029 84       		.byte	-124
+ 175 002a 00       		.byte	0
+ 176 002b 84       		.byte	-124
+ 177 002c 84       		.byte	-124
+ 178 002d 84       		.byte	-124
+ 179 002e 84       		.byte	-124
+ 180 002f 84       		.byte	-124
+ 181              		.ident	"GCC: (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0"
+ 182              		.section	.note.GNU-stack,"",@progbits
+GAS LISTING bootpack.s 			page 5
 
 
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 bootpack.c
-          bootpack.s:5      .text:0000000000000000 HariMain
+          bootpack.s:5      .text:0000000000000000 set_palette
+          bootpack.s:81     .text:000000000000008d init_palette
+          bootpack.s:132    .data:0000000000000000 table_rgb.1434
+          bootpack.s:104    .text:00000000000000a6 HariMain
 
 UNDEFINED SYMBOLS
+_io_load_eflags
+_io_cli
+_io_out8
+_io_store_eflags
 _io_hlt

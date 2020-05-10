@@ -1,7 +1,7 @@
 
 Discarded input sections
 
- .eh_frame      0x0000000000000000       0x34 bootpack.o
+ .eh_frame      0x0000000000000000       0x84 bootpack.o
 
 Memory Configuration
 
@@ -19,24 +19,30 @@ Linker script and memory map
                 0x0000000000000010        0x4 LONG 0x0
                 0x0000000000000014        0x4 LONG 0x34
                 0x0000000000000018        0x4 LONG 0xe9000000
-                0x000000000000001c        0x4 LONG 0x4 (HariMain - 0x20)
+                0x000000000000001c        0x4 LONG 0xf6 (HariMain - 0x20)
                 0x0000000000000020        0x4 LONG 0x310000
 
-.data           0x0000000000000024        0x0
- .data          0x0000000000000024        0x0 bootpack.o
- .data          0x0000000000000024        0x0 asmfunc.o
+.data           0x0000000000000040       0x30
+ .data          0x0000000000000040       0x30 bootpack.o
+ .data          0x0000000000000070        0x0 asmfunc.o
 
-.text           0x0000000000000024       0x2f
+.text           0x0000000000000070       0xf0
  *(.text)
- .text          0x0000000000000024       0x22 bootpack.o
-                0x0000000000000024                HariMain
- .text          0x0000000000000046        0xd asmfunc.o
-                0x0000000000000046                _io_hlt
-                0x0000000000000048                _write_mem8
+ .text          0x0000000000000070       0xcd bootpack.o
+                0x0000000000000070                set_palette
+                0x00000000000000fd                init_palette
+                0x0000000000000116                HariMain
+ .text          0x000000000000013d       0x23 asmfunc.o
+                0x000000000000013d                _io_hlt
+                0x000000000000013f                _io_load_eflags
+                0x0000000000000142                _io_store_eflags
+                0x0000000000000149                _io_cli
+                0x000000000000014b                _io_out8
+                0x0000000000000155                _write_mem8
 
-.bss            0x0000000000000053        0x0
- .bss           0x0000000000000053        0x0 bootpack.o
- .bss           0x0000000000000053        0x0 asmfunc.o
+.bss            0x0000000000000160        0x0
+ .bss           0x0000000000000160        0x0 bootpack.o
+ .bss           0x0000000000000160        0x0 asmfunc.o
 
 /DISCARD/
  *(.eh_frame)

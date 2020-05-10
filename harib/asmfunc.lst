@@ -9,12 +9,12 @@ GAS LISTING asmfunc.s 			page 1
    6 0000 F4       	    hlt
    7 0001 C3       	    ret
    8              	
-   9              	.global _write_mem8
-  10              	_write_mem8:
-  11 0002 8B4C2404 	    mov 4(%esp), %ecx # addr
-  12 0006 8A442408 	    mov 8(%esp), %al # data
-  13 000a 8801     	    mov %al, (%ecx)
-  14 000c C3       	    ret
+   9              	; .global _write_mem8
+  10              	; _write_mem8:
+  11 0002 8B4C2404 	;     mov 4(%esp), %ecx # addr
+  12 0006 8A442408 	;     mov 8(%esp), %al # data
+  13 000a 8801     	;     mov %al, (%ecx)
+  14 000c C3       	;     ret
 GAS LISTING asmfunc.s 			page 2
 
 

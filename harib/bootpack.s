@@ -8,23 +8,16 @@ HariMain:
 	pushl	%ebp
 	.cfi_def_cfa_offset 8
 	.cfi_offset 5, -8
+	movl	$655360, %eax
 	movl	%esp, %ebp
 	.cfi_def_cfa_register 5
-	pushl	%ebx
-	pushl	%edx
-	.cfi_offset 3, -12
-	movl	$655360, %ebx
+	subl	$8, %esp
 .L2:
-	pushl	%eax
-	pushl	%eax
-	movl	%ebx, %eax
-	andl	$15, %eax
-	pushl	%eax
-	pushl	%ebx
-	incl	%ebx
-	call	_write_mem8
-	addl	$16, %esp
-	cmpl	$720896, %ebx
+	movb	%al, %dl
+	incl	%eax
+	andl	$15, %edx
+	movb	%dl, -1(%eax)
+	cmpl	$720896, %eax
 	jne	.L2
 .L3:
 	call	_io_hlt

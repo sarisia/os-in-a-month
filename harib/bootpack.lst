@@ -11,36 +11,28 @@ GAS LISTING bootpack.s 			page 1
    8 0000 55       		pushl	%ebp
    9              		.cfi_def_cfa_offset 8
   10              		.cfi_offset 5, -8
-  11 0001 89E5     		movl	%esp, %ebp
-  12              		.cfi_def_cfa_register 5
-  13 0003 53       		pushl	%ebx
-  14 0004 52       		pushl	%edx
-  15              		.cfi_offset 3, -12
-  16 0005 BB00000A 		movl	$655360, %ebx
-  16      00
-  17              	.L2:
-  18 000a 50       		pushl	%eax
-  19 000b 50       		pushl	%eax
-  20 000c 89D8     		movl	%ebx, %eax
-  21 000e 83E00F   		andl	$15, %eax
-  22 0011 50       		pushl	%eax
-  23 0012 53       		pushl	%ebx
-  24 0013 43       		incl	%ebx
-  25 0014 E8FCFFFF 		call	_write_mem8
-  25      FF
-  26 0019 83C410   		addl	$16, %esp
-  27 001c 81FB0000 		cmpl	$720896, %ebx
-  27      0B00
-  28 0022 75E6     		jne	.L2
-  29              	.L3:
-  30 0024 E8FCFFFF 		call	_io_hlt
-  30      FF
-  31 0029 EBF9     		jmp	.L3
-  32              		.cfi_endproc
-  33              	.LFE0:
-  34              		.size	HariMain, .-HariMain
-  35              		.ident	"GCC: (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0"
-  36              		.section	.note.GNU-stack,"",@progbits
+  11 0001 B800000A 		movl	$655360, %eax
+  11      00
+  12 0006 89E5     		movl	%esp, %ebp
+  13              		.cfi_def_cfa_register 5
+  14 0008 83EC08   		subl	$8, %esp
+  15              	.L2:
+  16 000b 88C2     		movb	%al, %dl
+  17 000d 40       		incl	%eax
+  18 000e 83E20F   		andl	$15, %edx
+  19 0011 8850FF   		movb	%dl, -1(%eax)
+  20 0014 3D00000B 		cmpl	$720896, %eax
+  20      00
+  21 0019 75F0     		jne	.L2
+  22              	.L3:
+  23 001b E8FCFFFF 		call	_io_hlt
+  23      FF
+  24 0020 EBF9     		jmp	.L3
+  25              		.cfi_endproc
+  26              	.LFE0:
+  27              		.size	HariMain, .-HariMain
+  28              		.ident	"GCC: (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0"
+  29              		.section	.note.GNU-stack,"",@progbits
 GAS LISTING bootpack.s 			page 2
 
 
@@ -49,5 +41,4 @@ DEFINED SYMBOLS
           bootpack.s:5      .text:0000000000000000 HariMain
 
 UNDEFINED SYMBOLS
-_write_mem8
 _io_hlt
